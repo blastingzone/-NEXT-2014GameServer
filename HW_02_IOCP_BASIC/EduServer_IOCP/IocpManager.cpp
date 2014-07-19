@@ -3,6 +3,7 @@
 #include "EduServer_IOCP.h"
 #include "ClientSession.h"
 #include "SessionManager.h"
+#include <sysinfoapi.h>
 
 #define GQCS_TIMEOUT	20
 
@@ -21,6 +22,10 @@ IocpManager::~IocpManager()
 bool IocpManager::Initialize()
 {
 	//TODO: mIoThreadCount = ...;GetSystemInfo사용해서 set num of I/O threads
+	
+	SYSTEM_INFO sysInfo;
+	GetSystemInfo(&sysInfo);
+	mIoThreadCount = sysInfo.dwNumberOfProcessors;
 
 	/// winsock initializing
 	WSADATA wsa;
@@ -30,15 +35,24 @@ bool IocpManager::Initialize()
 	/// Create I/O Completion Port
 	//TODO: mCompletionPort = CreateIoCompletionPort(...)
 	
+	mCompletionPort = CreateIoCompletionPort( INVALID_HANDLE_VALUE, NULL, 0, 0 );
+	if ( NULL == mCompletionPort )
+	{
+		printf( "CreateIoCompletionPort failed : %d\n", GetLastError() );
+		return false;
+	}
+
 	/// create TCP socket
 	//TODO: mListenSocket = ...
 	
+	mListenSocket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_IP, NULL, 0, WSA_FLAG_OVERLAPPED );
+
 	int opt = 1;
 	setsockopt(mListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(int));
 
 	//TODO:  bind
-	//if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
-	//	return false;
+	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
+		return false;
 
 	return true;
 }
