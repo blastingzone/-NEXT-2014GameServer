@@ -75,6 +75,7 @@ bool IocpManager::StartIoThreads()
 		//TODO: HANDLE hThread = (HANDLE)_beginthreadex...);
 
 		HANDLE hThread = (HANDLE)_beginthreadex( NULL, 0, IoWorkerThread, mCompletionPort, 0, (unsigned*)&dwThreadId );
+		CloseHandle( hThread );
 
 		if ( NULL == hThread )
 		{
@@ -146,8 +147,8 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		OverlappedIOContext* context = nullptr;
 		ClientSession* asCompletionKey = nullptr;
 
-		int ret = 0; ///<여기에는 GetQueuedCompletionStatus(hComletionPort, ..., GQCS_TIMEOUT)를 수행한 결과값을 대입
-		ret = GetQueuedCompletionStatus( hComletionPort, &dwTransferred, (LPDWORD)&asCompletionKey, (LPOVERLAPPED*)context, GQCS_TIMEOUT );
+		///<여기에는 GetQueuedCompletionStatus(hComletionPort, ..., GQCS_TIMEOUT)를 수행한 결과값을 대입
+		int ret = GetQueuedCompletionStatus( hComletionPort, &dwTransferred, (LPDWORD)&asCompletionKey, (LPOVERLAPPED*)context, GQCS_TIMEOUT );
 
 		/// check time out first 
 		if ( ret == 0 && GetLastError() == WAIT_TIMEOUT )
@@ -166,6 +167,8 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		//}
 		if ( nullptr == context )
 		{
+			asCompletionKey->Disconnect( DR_COMPLETION_ERROR );
+			GSessionManager->DeleteClientSession( asCompletionKey );
 			continue;
 		}
 
@@ -201,7 +204,7 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 {
 
 	/// echo back 처리 client->PostSend()사용.
-	client->PostSend( context->mWsaBuf.buf, context->mWsaBuf.len );
+	client->PostSend( context->mWsaBuf.buf, dwTransferred );
 
 	delete context;
 
@@ -215,8 +218,8 @@ bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContex
 	
 	if ( context->mWsaBuf.len != dwTransferred )
 	{
-		client->PostSend( context->mWsaBuf.buf + dwTransferred, context->mWsaBuf.len - dwTransferred );
-
+		//client->PostSend( context->mWsaBuf.buf + dwTransferred, context->mWsaBuf.len - dwTransferred );
+		return false;
 	}
 
 	delete context;

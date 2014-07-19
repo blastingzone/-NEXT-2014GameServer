@@ -30,7 +30,7 @@ bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 		HANDLE handle = 0; //TODO: 여기에서 CreateIoCompletionPort((HANDLE)mSocket, ...);사용하여 연결할 것
 		
 		// connect I/O Completion Port to Socket
-		handle = CreateIoCompletionPort( (HANDLE)mSocket, GIocpManager->GetComletionPort(), 0, 0 );
+		handle = CreateIoCompletionPort( (HANDLE)mSocket, GIocpManager->GetComletionPort(), (DWORD)this, 0 );
 
 		if (handle != GIocpManager->GetComletionPort())
 		{
@@ -85,12 +85,13 @@ bool ClientSession::PostRecv() const
 	OverlappedIOContext* recvContext = new OverlappedIOContext(this, IO_RECV);
 
 	//TODO: WSARecv 사용하여 구현할 것
-
+	DWORD dwTransferred = 0;
+	DWORD dwFlag = 0;
 	int ret = WSARecv( mSocket,
 		&( recvContext->mWsaBuf ),
 		1,
-		&(recvContext->mWsaBuf.len),
-		NULL,
+		&dwTransferred,
+		&dwFlag,
 		&(recvContext->mOverlapped),
 		NULL);
 
@@ -122,7 +123,7 @@ bool ClientSession::PostSend(const char* buf, int len) const
 	int ret = WSASend( mSocket,
 		&( sendContext->mWsaBuf ),
 		1,
-		&( sendContext->mWsaBuf.len ),
+		NULL,
 		NULL,
 		&( sendContext->mOverlapped ),
 		NULL );
