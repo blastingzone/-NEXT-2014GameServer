@@ -51,6 +51,13 @@ bool IocpManager::Initialize()
 	setsockopt(mListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(int));
 
 	//TODO:  bind
+
+	SOCKADDR_IN serveraddr;
+	ZeroMemory(&serveraddr, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(8001);
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
 	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
 		return false;
 
