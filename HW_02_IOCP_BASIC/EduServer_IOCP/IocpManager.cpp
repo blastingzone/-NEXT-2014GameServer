@@ -6,6 +6,7 @@
 #include <sysinfoapi.h>
 
 #define GQCS_TIMEOUT	20
+#define SERVER_PORT		9001
 
 __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
@@ -55,7 +56,7 @@ bool IocpManager::Initialize()
 	SOCKADDR_IN serveraddr;
 	ZeroMemory(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(8001);
+	serveraddr.sin_port = htons( SERVER_PORT );
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
@@ -72,6 +73,15 @@ bool IocpManager::StartIoThreads()
 	{
 		DWORD dwThreadId;
 		//TODO: HANDLE hThread = (HANDLE)_beginthreadex...);
+
+		HANDLE hThread = (HANDLE)_beginthreadex( NULL, 0, IoWorkerThread, mCompletionPort, 0, (unsigned*)&dwThreadId );
+
+		if ( NULL == hThread )
+		{
+			printf( " Thread Create Error : %d \n", GetLastError() );
+
+			return false;
+		}
 	}
 
 	return true;
@@ -130,29 +140,34 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 	LIoThreadId = reinterpret_cast<int>(lpParam);
 	HANDLE hComletionPort = GIocpManager->GetComletionPort();
 
-	while (true)
+	while ( true )
 	{
 		DWORD dwTransferred = 0;
 		OverlappedIOContext* context = nullptr;
 		ClientSession* asCompletionKey = nullptr;
 
 		int ret = 0; ///<여기에는 GetQueuedCompletionStatus(hComletionPort, ..., GQCS_TIMEOUT)를 수행한 결과값을 대입
+		ret = GetQueuedCompletionStatus( hComletionPort, &dwTransferred, (LPDWORD)&asCompletionKey, (LPOVERLAPPED*)context, GQCS_TIMEOUT );
 
 		/// check time out first 
-		if (ret == 0 && GetLastError()==WAIT_TIMEOUT)
+		if ( ret == 0 && GetLastError() == WAIT_TIMEOUT )
 			continue;
 
-		if (ret == 0 || dwTransferred == 0)
+		if ( ret == 0 || dwTransferred == 0 )
 		{
 			/// connection closing
-			asCompletionKey->Disconnect(DR_RECV_ZERO);
-			GSessionManager->DeleteClientSession(asCompletionKey);
+			asCompletionKey->Disconnect( DR_RECV_ZERO );
+			GSessionManager->DeleteClientSession( asCompletionKey );
 			continue;
 		}
 
 		// if (nullptr == context) 인 경우 처리
 		//{
 		//}
+		if ( nullptr == context )
+		{
+			continue;
+		}
 
 		bool completionOk = true;
 		switch (context->mIoType)
@@ -186,7 +201,8 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 {
 
 	/// echo back 처리 client->PostSend()사용.
-	
+	client->PostSend( context->mWsaBuf.buf, context->mWsaBuf.len );
+
 	delete context;
 
 	return client->PostRecv();
@@ -197,6 +213,12 @@ bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContex
 	/// 전송 다 되었는지 확인하는 것 처리..
 	//if (context->mWsaBuf.len != dwTransferred) {...}
 	
+	if ( context->mWsaBuf.len != dwTransferred )
+	{
+		client->PostSend( context->mWsaBuf.buf + dwTransferred, context->mWsaBuf.len - dwTransferred );
+
+	}
+
 	delete context;
 	return true;
 }
