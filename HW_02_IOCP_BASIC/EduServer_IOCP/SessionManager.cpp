@@ -6,13 +6,15 @@ SessionManager* GSessionManager = nullptr;
 
 ClientSession* SessionManager::CreateClientSession(SOCKET sock)
 {
+	//메번 accpet될때마다 new를 해주어야 한다.
+	//풀같은걸 사용할 수 는 없나
 	ClientSession* client = new ClientSession(sock);
 
-	//TODO: lock으로 보호할 것
-	FastSpinlockGuard spinLock( mLock );
+	mLock.EnterLock();
 	{
 		mClientList.insert(ClientList::value_type(sock, client));
 	}
+	mLock.LeaveLock();
 
 	return client;
 }
@@ -20,11 +22,11 @@ ClientSession* SessionManager::CreateClientSession(SOCKET sock)
 
 void SessionManager::DeleteClientSession(ClientSession* client)
 {
-	//TODO: lock으로 보호할 것
-	FastSpinlockGuard spinLock( mLock );
+	mLock.EnterLock();
 	{
 		mClientList.erase(client->mSocket);
 	}
+	mLock.LeaveLock();
 
 	delete client;
 }
