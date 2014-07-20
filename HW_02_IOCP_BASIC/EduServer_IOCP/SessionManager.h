@@ -14,6 +14,7 @@ public:
 
 	void DeleteClientSession(ClientSession* client);
 
+	//인터락 증감 함수
 	int IncreaseConnectionCount() { return InterlockedIncrement(&mCurrentConnectionCount); }
 	int DecreaseConnectionCount() { return InterlockedDecrement(&mCurrentConnectionCount); }
 
@@ -24,6 +25,9 @@ private:
 
 	FastSpinlock mLock;
 
+	//volatile
+	//레지스터에 등록된 걸 사용하지 않고 메모리에 접근하여 읽고 쓰기 때문에
+	//상대적으로 안전
 	volatile long mCurrentConnectionCount;
 };
 
