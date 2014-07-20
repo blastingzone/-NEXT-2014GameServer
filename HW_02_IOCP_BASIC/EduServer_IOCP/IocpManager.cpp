@@ -204,7 +204,10 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 {
 
 	/// echo back 처리 client->PostSend()사용.
-	client->PostSend( context->mWsaBuf.buf, dwTransferred );
+	if ( !client->PostSend( context->mWsaBuf.buf, dwTransferred ) )
+	{
+		return false;
+	}
 
 	delete context;
 
@@ -218,7 +221,9 @@ bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContex
 	
 	if ( context->mWsaBuf.len != dwTransferred )
 	{
-		//client->PostSend( context->mWsaBuf.buf + dwTransferred, context->mWsaBuf.len - dwTransferred );
+		client->PostSend( context->mWsaBuf.buf + dwTransferred, context->mWsaBuf.len - dwTransferred );
+		delete context;
+
 		return false;
 	}
 
