@@ -7,7 +7,8 @@
 
 #define GQCS_TIMEOUT	20
 
-__declspec(thread) int LIoThreadId = 0;
+__declspec(thread) int LIoThreadId = 0; ///< 이건 어디 쓰려고?
+
 IocpManager* GIocpManager = nullptr;
 
 IocpManager::IocpManager() : mCompletionPort(NULL), mIoThreadCount(2), mListenSocket(NULL)
@@ -202,7 +203,7 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 {
 
 	/// echo back 처리 client->PostSend()사용.
-	if ( !client->PostSend( context->mWsaBuf.buf, dwTransferred ) )
+	if ( !client->PostSend( context->mWsaBuf.buf, dwTransferred ) ) ///< 엄밀히 말하면 mWsaBuf가 아니라 mBuffer의 데이터를 보내는 것이다.
 	{
 		delete context;
 		return false;
@@ -218,7 +219,7 @@ bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContex
 	if ( context->mWsaBuf.len != dwTransferred )
 	{
 		//보낸 만큼의 뒤에서 계속해서 전송
-		if (!client->PostSend(context->mBuffer + dwTransferred, context->mWsaBuf.len - dwTransferred)) {
+		if (!client->PostSend(context->mBuffer + dwTransferred, context->mWsaBuf.len - dwTransferred)) { ///< 이렇게 처리하면 동시에 2개의 스레드에서 하나의 소켓에 대해 send를 할 수 있다.
 			delete context;
 			return false;
 		}
