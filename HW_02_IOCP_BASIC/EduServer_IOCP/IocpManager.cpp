@@ -3,11 +3,12 @@
 #include "EduServer_IOCP.h"
 #include "ClientSession.h"
 #include "SessionManager.h"
+#include "Exception.h"
 #include <sysinfoapi.h>
 
 #define GQCS_TIMEOUT	20
 
-__declspec(thread) int LIoThreadId = 0; ///< 이건 어디 쓰려고?
+__declspec(thread) int LIoThreadId = 0;
 
 IocpManager* GIocpManager = nullptr;
 
@@ -166,10 +167,13 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		}
 
 		//여기 들어오는 경우는 iocp객체가 사라졌을 경우
+		//아니면 거의 하드웨어 오류
 		//쓰레드 종료
-		if ( nullptr == context )
+		//뻑내두됨
+		if (nullptr == context) {
+			CRASH_ASSERT(false);
 			return 0;
-
+		}
 
 		bool completionOk = true;
 		switch (context->mIoType)
@@ -203,7 +207,8 @@ bool IocpManager::ReceiveCompletion(const ClientSession* client, OverlappedIOCon
 {
 
 	/// echo back 처리 client->PostSend()사용.
-	if ( !client->PostSend( context->mWsaBuf.buf, dwTransferred ) ) ///< 엄밀히 말하면 mWsaBuf가 아니라 mBuffer의 데이터를 보내는 것이다.
+	//원칙적으로 context->mBuffer를 넘겨줌
+	if ( !client->PostSend( context->mBuffer, dwTransferred ) )
 	{
 		delete context;
 		return false;
@@ -218,11 +223,15 @@ bool IocpManager::SendCompletion(const ClientSession* client, OverlappedIOContex
 	/// 전송 다 되었는지 확인하는 것 처리..
 	if ( context->mWsaBuf.len != dwTransferred )
 	{
+		/*
 		//보낸 만큼의 뒤에서 계속해서 전송
-		if (!client->PostSend(context->mBuffer + dwTransferred, context->mWsaBuf.len - dwTransferred)) { ///< 이렇게 처리하면 동시에 2개의 스레드에서 하나의 소켓에 대해 send를 할 수 있다.
+		///< 이렇게 처리하면 동시에 2개의 스레드에서 하나의 소켓에 대해 send를 할 수 있다.
+		if (!client->PostSend(context->mBuffer + dwTransferred, context->mWsaBuf.len - dwTransferred)) {
 			delete context;
 			return false;
 		}
+		*/
+		printf_s("다 안보내졌지만 나는 시크하게 끊겠다.\n");
 	}
 
 	delete context;

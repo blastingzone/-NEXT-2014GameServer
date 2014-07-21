@@ -8,8 +8,7 @@
 bool ClientSession::OnConnect(SOCKADDR_IN* addr)
 {
 	//이 영역 lock으로 보호 할 것
-	//OnConnect가 두번 호출될 일이 있는가? ///< 왜 아래 영역을 보호해야 할 것 같은가?
-
+	//OnConnect함수가 동시에 여러번 호출되면 내부 winapi함수가 동시에 적용이 되어버림
 	FastSpinlockGuard spinLock( mLock );
 
 	CRASH_ASSERT(LThreadType == THREAD_MAIN_ACCEPT);
@@ -94,8 +93,10 @@ bool ClientSession::PostRecv() const
 	{
 		if ( WSA_IO_PENDING != WSAGetLastError() )
 		{
-			//10054 강제종료 ///< 어떤 에러지?
+			//10054 강제종료
+			//원격지에서 종료했을 때 알려줌
 			printf_s( "WSA Recv Error : %d \n", WSAGetLastError() );
+			delete recvContext;
 			return false;
 		}
 	}
@@ -123,6 +124,7 @@ bool ClientSession::PostSend(const char* buf, int len) const
 		{
 			//10053 강제종료
 			printf_s( "WSA Send Error : %d \n", WSAGetLastError() );
+			delete sendContext;
 			return false;
 		}
 	}

@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "ProfessorMoon.h"
 #include "Exception.h"
 #include "EduServer_IOCP.h"
 #include "ClientSession.h"
@@ -22,6 +23,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	GSessionManager = new SessionManager;
 	GIocpManager = new IocpManager;
 
+	PrintMoon();
 
 	if (false == GIocpManager->Initialize())
 		return -1;
