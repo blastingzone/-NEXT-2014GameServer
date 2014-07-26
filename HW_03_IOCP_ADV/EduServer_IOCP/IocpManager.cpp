@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Exception.h"
 #include "IocpManager.h"
 #include "EduServer_IOCP.h"
@@ -11,19 +11,96 @@ __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
 
 
-//TODO AcceptEx DisconnectEx �Լ� ����� �� �ֵ��� ����.
+//TODO AcceptEx DisconnectEx 함수 사용할 수 있도록 구현.
 
 BOOL DisconnectEx(SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved)
 {
+	LPFN_DISCONNECTEX lpfnDisconnectEx = NULL;
+	GUID GuidDisconnectEx = WSAID_DISCONNECTEX;
+
+	int ret = WSAIoctl( hSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+		&GuidDisconnectEx, sizeof( GuidDisconnectEx ),
+		&lpfnDisconnectEx, sizeof( lpfnDisconnectEx ),
+		NULL, NULL, NULL );
+
+	if ( SOCKET_ERROR == ret )
+	{
+		printf( "WSAIoctl DisconnectEx Error : %d \n", WSAGetLastError() );
+		closesocket( hSocket );
+		WSACleanup();
+		return false;
+	}
+
+	if ( !lpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved ) )
+	{
+		printf( "DisconnectEx Error : %d, \n", WSAGetLastError() );
+		return false;
+	}
+
 	//return ...
-	return 0;
+	return true;
 }
 
-BOOL AcceptEx(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
+// __stdcall 붙이면 C2373 재정의 에러 사라짐
+BOOL __stdcall AcceptEx(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
 	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped)
-{
+{	
+	//AccepEx 호출 전에 sListenSocket은 검사를 거쳤다고 본다
+	LPFN_ACCEPTEX lpfnAcceptEx = NULL;
+	GUID GuidAcceptEx = WSAID_ACCEPTEX;
+
+	int ret = WSAIoctl( sListenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+		&GuidAcceptEx, sizeof( GuidAcceptEx),
+		&lpfnAcceptEx, sizeof( lpfnAcceptEx ),
+		lpdwBytesReceived, NULL, NULL );
+
+	if ( SOCKET_ERROR == ret )
+	{
+		printf( "WSAIoctl AcceptEx Error : %d \n", WSAGetLastError() );
+		closesocket( sListenSocket );
+		WSACleanup();
+		return false;
+	}
+
+	sAcceptSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+	if ( INVALID_SOCKET == sAcceptSocket )
+	{
+		printf( "AcceptSocket Error! Error = %d", WSAGetLastError() );
+		closesocket( sListenSocket );
+		WSACleanup();
+		return false;
+	}
+
+	ZeroMemory( &lpOverlapped, sizeof( lpOverlapped ) );
+
+	//AcceptEx()
+	ret = lpfnAcceptEx( sListenSocket, sAcceptSocket, lpOutputBuffer,
+		dwReceiveDataLength - ( ( sizeof(sockaddr_in)+16 ) * 2 ),
+		sizeof(sockaddr_in)+16, sizeof(sockaddr_in)+16,
+		lpdwBytesReceived, lpOverlapped );
+
+	if ( FALSE == ret )
+	{
+		printf( "AcceptEx Error! Error = %d", WSAGetLastError() );
+		closesocket( sListenSocket );
+		closesocket( sAcceptSocket );
+		WSACleanup();
+		return false;
+	}
+
+	HANDLE handle = CreateIoCompletionPort( (HANDLE)sAcceptSocket, GIocpManager->GetComletionPort(), (u_long)0, 0 );
+	// handle == NULL 이면 IOCP 할당 실패
+	if ( handle )
+	{
+		printf( "CreateIoCompletionPort Error! GetLastError = %d", GetLastError() );
+		closesocket( sListenSocket );
+		closesocket( sAcceptSocket );
+		WSACleanup();
+		return false;
+	}
+
 	//return ...
-	return 0;
+	return true;
 }
 
 IocpManager::IocpManager() : mCompletionPort(NULL), mIoThreadCount(2), mListenSocket(NULL)
@@ -77,12 +154,11 @@ bool IocpManager::Initialize()
 	if (SOCKET_ERROR == bind(mListenSocket, (SOCKADDR*)&serveraddr, sizeof(serveraddr)))
 		return false;
 
-	//TODO : WSAIoctl�� �̿��Ͽ� AcceptEx, DisconnectEx �Լ� ��밡���ϵ��� �ϴ� �۾�..
-
-
-
-
-
+	//TODO : WSAIoctl을 이용하여 AcceptEx, DisconnectEx 함수 사용가능하도록 하는 작업..
+	// 음?? 이게 왜 여기있지.. 설마... 위에 선언된 AcceptEx랑 DisconnectEx는 함수 포인터 뽑아내면 땡인 건가?
+	BOOL( *pAcceptEx )( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
+		DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped );
+	BOOL( *pDisconnectEx )( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved );
 
 	/// make session pool
 	GSessionManager->PrepareSessions();
@@ -153,7 +229,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 		{
 			int gle = GetLastError();
 
-			//TODO: check time out first ... GQCS Ÿ�� �ƿ��� ���� ���?
+			//TODO: check time out first ... GQCS 타임 아웃의 경우는 어떻게?
 			
 		
 			if (context->mIoType == IO_RECV || context->mIoType == IO_SEND )
