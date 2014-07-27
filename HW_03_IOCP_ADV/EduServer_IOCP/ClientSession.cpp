@@ -132,7 +132,6 @@ void ClientSession::AcceptCompletion()
 
 	printf_s("[DEBUG] Client Connected: IP=%s, PORT=%d\n", inet_ntoa(mClientAddr.sin_addr), ntohs(mClientAddr.sin_port));
 	
-	// Accept Completion 인데 왜 PreRecv()지?
 	if (false == PreRecv())
 	{
 		printf_s("[DEBUG] PreRecv error: %d\n", GetLastError());
@@ -188,7 +187,7 @@ bool ClientSession::PreRecv()
 			return false;
 		}
 	}
-
+	
 	return true;
 }
 
