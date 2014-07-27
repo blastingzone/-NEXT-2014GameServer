@@ -50,6 +50,14 @@ bool ClientSession::PostAccept()
 	OverlappedAcceptContext* acceptContext = new OverlappedAcceptContext(this);
 
 	//TODO : AccpetEx를 이용한 구현.
+	if ( !AcceptEx( *GIocpManager->GetListenSocket(),
+		acceptContext->mSessionObject->GetSocket(),
+		acceptContext->mWsaBuf.buf, BUFSIZE, NULL, NULL,
+		&( acceptContext->mWsaBuf.len ), &acceptContext->mOverlapped ) )
+	{
+		printf( "PostAccept ==> AcceptEx Failed : %d \n", GetLastError() );
+		return false;
+	}
 
 	return true;
 }
@@ -101,7 +109,13 @@ void ClientSession::AcceptCompletion()
 
 		//TODO: CreateIoCompletionPort를 이용한 소켓 연결
 		//HANDLE handle = CreateIoCompletionPort(...);
-		
+		HANDLE handle = CreateIoCompletionPort( (HANDLE)mSocket, GIocpManager->GetComletionPort(), 0, 0 );
+		if ( NULL == handle )
+		{
+			printf( "CreateIoCompletionPort Error! GetLastError = %d", GetLastError() );
+			resultOk = false;
+			break;
+		}
 
 	} while (false);
 
@@ -130,6 +144,13 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 	OverlappedDisconnectContext* context = new OverlappedDisconnectContext(this, dr);
 
 	//TODO: DisconnectEx를 이용한 연결 끊기 요청
+	// 왜 AcceptEx 함수는 호출되는데 DisconnectEx 함수는 못 찾는 걸까? 일단 이렇게 하긴 한다만...
+	// ㅋㅋㅋ 보면 볼수록 해괴한 구조다 DIsconnectEx()를 IocpManager 클래스 안으로 넣어줘야 하나?
+	if ( !GIocpManager->mLpfnDisconnectEx(context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0  ) )
+	{
+		printf( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
+		return;
+	}
 }
 
 void ClientSession::DisconnectCompletion(DisconnectReason dr)
@@ -149,7 +170,21 @@ bool ClientSession::PreRecv()
 	OverlappedPreRecvContext* recvContext = new OverlappedPreRecvContext(this);
 
 	//TODO: zero-byte recv 구현
+	DWORD dwFlag = 0;
+	DWORD dwRecvBytes = 0;
 
+	recvContext->mWsaBuf.buf = NULL;
+	recvContext->mWsaBuf.len = 0;
+
+	if ( SOCKET_ERROR == WSARecv( mSocket, &recvContext->mWsaBuf, 1, &dwRecvBytes, &dwFlag, (LPWSAOVERLAPPED)recvContext, NULL ) )
+	{
+		if ( WSAGetLastError() != WSA_IO_PENDING )
+		{
+			DeleteIoContext( recvContext );
+			printf_s( "ClientSession::PreRecv Error : %d\n", GetLastError() );
+			return false;
+		}
+	}
 
 	return true;
 }

@@ -26,6 +26,10 @@ public:
 
 	SOCKET* GetListenSocket()  { return &mListenSocket;  }
 
+	// 함수 포인터 추가
+	LPFN_ACCEPTEX mLpfnAcceptEx = NULL;
+	LPFN_DISCONNECTEX mLpfnDisconnectEx = NULL;
+
 private:
 
 	static unsigned int WINAPI IoWorkerThread(LPVOID lpParam);
