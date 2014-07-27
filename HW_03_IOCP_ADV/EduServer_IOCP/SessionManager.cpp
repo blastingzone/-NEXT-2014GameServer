@@ -64,7 +64,8 @@ bool SessionManager::AcceptSessions()
 			mFreeSessionList.pop_back();
 			client->AddRef();
 
-			--mCurrentReturnCount;
+			//--mCurrentReturnCount;
+			++mCurrentIssueCount;
 		}
 		else
 		{

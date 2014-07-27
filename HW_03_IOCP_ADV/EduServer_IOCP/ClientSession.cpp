@@ -114,7 +114,7 @@ void ClientSession::AcceptCompletion()
 		//TODO: CreateIoCompletionPort를 이용한 소켓 연결
 		//HANDLE handle = CreateIoCompletionPort(...);
 		HANDLE handle = CreateIoCompletionPort( (HANDLE)mSocket, GIocpManager->GetComletionPort(), 0, 0 );
-		if ( NULL == handle )
+		if (handle != GIocpManager->GetComletionPort())
 		{
 			printf( "CreateIoCompletionPort Error! GetLastError = %d", GetLastError() );
 			resultOk = false;
