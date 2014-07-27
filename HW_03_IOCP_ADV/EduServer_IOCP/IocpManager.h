@@ -26,9 +26,8 @@ public:
 
 	SOCKET* GetListenSocket()  { return &mListenSocket;  }
 
-	// 함수 포인터 추가
-	LPFN_ACCEPTEX mLpfnAcceptEx = NULL;
-	LPFN_DISCONNECTEX mLpfnDisconnectEx = NULL;
+	BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved );
+	BOOL AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength, DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped );
 
 private:
 
@@ -37,16 +36,18 @@ private:
 	static bool PreReceiveCompletion(ClientSession* client, OverlappedPreRecvContext* context, DWORD dwTransferred);
 	static bool ReceiveCompletion(ClientSession* client, OverlappedRecvContext* context, DWORD dwTransferred);
 	static bool SendCompletion(ClientSession* client, OverlappedSendContext* context, DWORD dwTransferred);
-
+	
 private:
 
 	HANDLE	mCompletionPort;
 	int		mIoThreadCount;
 
 	SOCKET	mListenSocket;
+
+	// 함수 포인터 추가
+	LPFN_ACCEPTEX mLpfnAcceptEx = NULL;
+	LPFN_DISCONNECTEX mLpfnDisconnectEx = NULL;
 };
 
 extern __declspec(thread) int LIoThreadId;
 extern IocpManager* GIocpManager;
-
-

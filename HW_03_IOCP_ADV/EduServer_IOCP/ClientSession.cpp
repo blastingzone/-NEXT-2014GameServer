@@ -54,7 +54,7 @@ bool ClientSession::PostAccept()
 	acceptContext->mWsaBuf.len = mBuffer.GetFreeSpaceSize();
 
 	//TODO : AccpetEx를 이용한 구현.
-	if ( !AcceptEx( *GIocpManager->GetListenSocket(),
+	if ( !GIocpManager->AcceptEx( *GIocpManager->GetListenSocket(),
 		acceptContext->mSessionObject->GetSocket(),
 		acceptContext->mWsaBuf.buf, NULL, sizeof( sockaddr_in ) + 16, sizeof(sockaddr_in)+16,
 		&dwRecvBytes, (OVERLAPPED*)acceptContext ) )
@@ -131,7 +131,8 @@ void ClientSession::AcceptCompletion()
 	}
 
 	printf_s("[DEBUG] Client Connected: IP=%s, PORT=%d\n", inet_ntoa(mClientAddr.sin_addr), ntohs(mClientAddr.sin_port));
-
+	
+	// Accept Completion 인데 왜 PreRecv()지?
 	if (false == PreRecv())
 	{
 		printf_s("[DEBUG] PreRecv error: %d\n", GetLastError());
@@ -148,9 +149,7 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 	OverlappedDisconnectContext* context = new OverlappedDisconnectContext(this, dr);
 
 	//TODO: DisconnectEx를 이용한 연결 끊기 요청
-	// 왜 AcceptEx 함수는 호출되는데 DisconnectEx 함수는 못 찾는 걸까? 일단 이렇게 하긴 한다만...
-	// ㅋㅋㅋ 보면 볼수록 해괴한 구조다 DIsconnectEx()를 IocpManager 클래스 안으로 넣어줘야 하나?
-	if ( !GIocpManager->mLpfnDisconnectEx(context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0  ) )
+	if ( !GIocpManager->DisconnectEx( context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0 ) )
 	{
 		printf( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
 		return;

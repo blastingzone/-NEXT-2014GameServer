@@ -10,10 +10,8 @@
 __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
 
-
 //TODO AcceptEx DisconnectEx 함수 사용할 수 있도록 구현.
-
-BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved )
+BOOL IocpManager::DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved )
 {
 	//return ...
 	int ret = GIocpManager->mLpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved );
@@ -27,8 +25,7 @@ BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWO
 	}
 }
 
-// __stdcall 붙이면 C2373 재정의 에러 사라짐
-BOOL __stdcall AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
+BOOL IocpManager::AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
 	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped )
 {
 	//return ...
