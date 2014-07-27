@@ -59,7 +59,7 @@ bool ClientSession::PostAccept()
 		acceptContext->mWsaBuf.buf, NULL, sizeof( sockaddr_in ) + 16, sizeof(sockaddr_in)+16,
 		&dwRecvBytes, (OVERLAPPED*)acceptContext ) )
 	{
-		printf( "PostAccept ==> AcceptEx Failed : %d \n", WSAGetLastError() );
+		printf_s( "PostAccept ==> AcceptEx Failed : %d \n", WSAGetLastError() );
 		return false;
 	}
 
@@ -116,7 +116,7 @@ void ClientSession::AcceptCompletion()
 		HANDLE handle = CreateIoCompletionPort( (HANDLE)mSocket, GIocpManager->GetComletionPort(), 0, 0 );
 		if (handle != GIocpManager->GetComletionPort())
 		{
-			printf( "CreateIoCompletionPort Error! GetLastError = %d", GetLastError() );
+			printf_s( "CreateIoCompletionPort Error! GetLastError = %d", GetLastError() );
 			resultOk = false;
 			break;
 		}
@@ -150,7 +150,7 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 	//TODO: DisconnectEx를 이용한 연결 끊기 요청
 	if ( !GIocpManager->DisconnectEx( context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0 ) )
 	{
-		printf( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
+		printf_s( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
 		return;
 	}
 }

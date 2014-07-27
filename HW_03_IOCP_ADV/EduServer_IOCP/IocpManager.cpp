@@ -105,7 +105,7 @@ bool IocpManager::Initialize()
 
 	if ( SOCKET_ERROR == ret )
 	{
-		printf( "WSAIoctl AcceptEx Error : %d \n", WSAGetLastError() );
+		printf_s( "WSAIoctl AcceptEx Error : %d \n", WSAGetLastError() );
 		closesocket( mListenSocket );
 		WSACleanup();
 		return false;
@@ -120,7 +120,7 @@ bool IocpManager::Initialize()
 
 	if ( SOCKET_ERROR == ret )
 	{
-		printf( "WSAIoctl DisconnectEx Error : %d \n", WSAGetLastError() );
+		printf_s( "WSAIoctl DisconnectEx Error : %d \n", WSAGetLastError() );
 		closesocket( mListenSocket );
 		WSACleanup();
 		return false;
