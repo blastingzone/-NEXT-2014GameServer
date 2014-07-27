@@ -16,18 +16,33 @@ IocpManager* GIocpManager = nullptr;
 BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved )
 {
 	//return ...
-	return GIocpManager->mLpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved );
+	int ret = GIocpManager->mLpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved );
+	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 // __stdcall 붙이면 C2373 재정의 에러 사라짐
-BOOL __stdcall AcceptEx(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
-	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped)
-{	
+BOOL __stdcall AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
+	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped )
+{
 	//return ...
-	return GIocpManager->mLpfnAcceptEx( sListenSocket, sAcceptSocket, lpOutputBuffer,
-		dwReceiveDataLength - ( ( sizeof(sockaddr_in)+16 ) * 2 ),
-		sizeof(sockaddr_in)+16, sizeof(sockaddr_in)+16,
+	int ret = GIocpManager->mLpfnAcceptEx( sListenSocket, sAcceptSocket, lpOutputBuffer,
+		dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength,
 		lpdwBytesReceived, lpOverlapped );
+	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 IocpManager::IocpManager() : mCompletionPort(NULL), mIoThreadCount(2), mListenSocket(NULL)
