@@ -23,7 +23,8 @@ void SessionManager::PrepareSessions()
 	for (int i = 0; i < MAX_CONNECTION; ++i)
 	{
 		ClientSession* client = new ClientSession();
-			
+		//session reset
+		client->SessionReset();
 		mFreeSessionList.push_back(client);
 	}
 }
@@ -61,6 +62,7 @@ bool SessionManager::AcceptSessions()
 		//	return false;
 		if ( client->PostAccept() )
 		{
+			//성공하면 노드를 삭제
 			mFreeSessionList.pop_back();
 			client->AddRef();
 
