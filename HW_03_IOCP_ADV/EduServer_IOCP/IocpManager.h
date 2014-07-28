@@ -26,8 +26,8 @@ public:
 
 	SOCKET* GetListenSocket()  { return &mListenSocket;  }
 
-	BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved );
-	BOOL AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength, DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped );
+	static BOOL DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved );
+	static BOOL AcceptEx(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength, DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped);
 
 private:
 
@@ -45,8 +45,8 @@ private:
 	SOCKET	mListenSocket;
 
 	// 함수 포인터 추가
-	LPFN_ACCEPTEX mLpfnAcceptEx = NULL;
-	LPFN_DISCONNECTEX mLpfnDisconnectEx = NULL;
+	static LPFN_ACCEPTEX mLpfnAcceptEx;
+	static LPFN_DISCONNECTEX mLpfnDisconnectEx;
 };
 
 extern __declspec(thread) int LIoThreadId;

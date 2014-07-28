@@ -26,6 +26,8 @@ private:
 
 	FastSpinlock mLock;
 
+	//10의 19승까지 가지만 overflow의 위험이 있음
+	//overflow가 일어나면 성공했다는 뜻이니...
 	uint64_t mCurrentIssueCount;
 	uint64_t mCurrentReturnCount;
 };

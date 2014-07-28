@@ -6,40 +6,36 @@
 #include "SessionManager.h"
 
 #define GQCS_TIMEOUT	INFINITE //20
+//#define GQCS_TIMEOUT	20
 
 __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
 
+LPFN_ACCEPTEX IocpManager::mLpfnAcceptEx;
+LPFN_DISCONNECTEX IocpManager::mLpfnDisconnectEx;
+
 //TODO AcceptEx DisconnectEx 함수 사용할 수 있도록 구현.
 BOOL IocpManager::DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD dwFlags, DWORD reserved )
 {
-	//return ...
-	int ret = GIocpManager->mLpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved );
-	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING ) ///# 헐? int와 bool을 비교? 위험한 코드다.
+	if (IocpManager::mLpfnDisconnectEx)
 	{
-		return true;
+		return IocpManager::mLpfnDisconnectEx(hSocket, lpOverlapped, dwFlags, reserved);
 	}
-	else
-	{
-		return false;
-	}
+
+	return FALSE;
 }
 
 BOOL IocpManager::AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, DWORD dwReceiveDataLength,
 	DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength, LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped )
 {
 	//return ...
-	int ret = GIocpManager->mLpfnAcceptEx( sListenSocket, sAcceptSocket, lpOutputBuffer,
-		dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength,
-		lpdwBytesReceived, lpOverlapped );
-	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING ) ///# 마찬가지로 위험.
+	if (IocpManager::mLpfnAcceptEx)
 	{
-		return true;
+		return IocpManager::mLpfnAcceptEx(sListenSocket, sAcceptSocket, lpOutputBuffer, dwReceiveDataLength,
+			dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived, lpOverlapped);
 	}
-	else
-	{
-		return false;
-	}
+
+	return FALSE;
 }
 
 IocpManager::IocpManager() : mCompletionPort(NULL), mIoThreadCount(2), mListenSocket(NULL)
@@ -197,15 +193,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 
 			//TODO: check time out first ... GQCS 타임 아웃의 경우는 어떻게?
 			if ( WAIT_TIMEOUT == gle )
-			{
-				CRASH_ASSERT( nullptr != theClient ); ///# ret==TRUE 이고, dwTransferred==0이고, TIMEOUT인 경우에 context가 null인 경우가 있을 수 있다.
-
-				theClient->DisconnectRequest( DR_ONCONNECT_ERROR );
-
-				DeleteIoContext( context );
-
 				continue;
-			}
 		
 			if (context->mIoType == IO_RECV || context->mIoType == IO_SEND )
 			{

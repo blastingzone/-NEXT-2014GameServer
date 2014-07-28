@@ -51,19 +51,23 @@ bool ClientSession::PostAccept()
 	
 	DWORD dwRecvBytes = 0;
 	acceptContext->mWsaBuf.buf = mBuffer.GetBuffer();
-	acceptContext->mWsaBuf.len = mBuffer.GetFreeSpaceSize();
+	acceptContext->mWsaBuf.len = (ULONG)mBuffer.GetFreeSpaceSize();
 
 	//TODO : AccpetEx를 이용한 구현.
 	if ( !GIocpManager->AcceptEx( *GIocpManager->GetListenSocket(), ///# accept용 버퍼는 따로 만들면 편하다.
 		acceptContext->mSessionObject->GetSocket(),
 		acceptContext->mWsaBuf.buf, NULL, sizeof( sockaddr_in ) + 16, sizeof(sockaddr_in)+16,
-		&dwRecvBytes, (OVERLAPPED*)acceptContext ) )
+		&dwRecvBytes, (OVERLAPPED*)acceptContext ))
 	{
-		///# WSA_IO_PENDING 체크는 즉시 해줘야 일관성이 있다. 
-		///# acceptContext 지우는것은 어디서?
+		int ret = WSAGetLastError();
 
-		printf_s( "PostAccept ==> AcceptEx Failed : %d \n", WSAGetLastError() );
-		return false;
+		if (ret != WSA_IO_PENDING)
+		{
+			printf_s("PostAccept ==> AcceptEx Failed : %d \n", ret);
+			DeleteIoContext(acceptContext);
+
+			return false;
+		}
 	}
 
 	return true;
@@ -154,9 +158,12 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 	if ( !GIocpManager->DisconnectEx( context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0 ) )
 	{
 		///# WSA_IO_PENDING 체크는 즉시 해줘야 일관성이 있다. 
-
-		printf_s( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
-		return;
+		int ret = GetLastError();
+		if (ret != WSA_IO_PENDING)
+		{
+			DeleteIoContext(context);
+			printf_s("DisconnectRequest ==> DisconnectRequest Error : %d \n", ret);
+		}
 	}
 }
 
