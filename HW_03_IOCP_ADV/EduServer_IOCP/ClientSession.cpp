@@ -60,6 +60,7 @@ bool ClientSession::PostAccept()
 		&dwRecvBytes, (OVERLAPPED*)acceptContext ) )
 	{
 		///# WSA_IO_PENDING 체크는 즉시 해줘야 일관성이 있다. 
+		///# acceptContext 지우는것은 어디서?
 
 		printf_s( "PostAccept ==> AcceptEx Failed : %d \n", WSAGetLastError() );
 		return false;
