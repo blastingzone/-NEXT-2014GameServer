@@ -54,11 +54,13 @@ bool ClientSession::PostAccept()
 	acceptContext->mWsaBuf.len = mBuffer.GetFreeSpaceSize();
 
 	//TODO : AccpetEx를 이용한 구현.
-	if ( !GIocpManager->AcceptEx( *GIocpManager->GetListenSocket(),
+	if ( !GIocpManager->AcceptEx( *GIocpManager->GetListenSocket(), ///# accept용 버퍼는 따로 만들면 편하다.
 		acceptContext->mSessionObject->GetSocket(),
 		acceptContext->mWsaBuf.buf, NULL, sizeof( sockaddr_in ) + 16, sizeof(sockaddr_in)+16,
 		&dwRecvBytes, (OVERLAPPED*)acceptContext ) )
 	{
+		///# WSA_IO_PENDING 체크는 즉시 해줘야 일관성이 있다. 
+
 		printf_s( "PostAccept ==> AcceptEx Failed : %d \n", WSAGetLastError() );
 		return false;
 	}
@@ -150,6 +152,8 @@ void ClientSession::DisconnectRequest(DisconnectReason dr)
 	//TODO: DisconnectEx를 이용한 연결 끊기 요청
 	if ( !GIocpManager->DisconnectEx( context->mSessionObject->GetSocket(), &context->mOverlapped, TF_REUSE_SOCKET, 0 ) )
 	{
+		///# WSA_IO_PENDING 체크는 즉시 해줘야 일관성이 있다. 
+
 		printf_s( "DisconnectRequest ==> DisconnectRequest Error : %d \n", GetLastError() );
 		return;
 	}

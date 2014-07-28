@@ -15,7 +15,7 @@ BOOL IocpManager::DisconnectEx( SOCKET hSocket, LPOVERLAPPED lpOverlapped, DWORD
 {
 	//return ...
 	int ret = GIocpManager->mLpfnDisconnectEx( hSocket, lpOverlapped, dwFlags, reserved );
-	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING )
+	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING ) ///# 헐? int와 bool을 비교? 위험한 코드다.
 	{
 		return true;
 	}
@@ -32,7 +32,7 @@ BOOL IocpManager::AcceptEx( SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lp
 	int ret = GIocpManager->mLpfnAcceptEx( sListenSocket, sAcceptSocket, lpOutputBuffer,
 		dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength,
 		lpdwBytesReceived, lpOverlapped );
-	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING )
+	if ( ret == true || WSAGetLastError() == ERROR_IO_PENDING ) ///# 마찬가지로 위험.
 	{
 		return true;
 	}
@@ -198,7 +198,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 			//TODO: check time out first ... GQCS 타임 아웃의 경우는 어떻게?
 			if ( WAIT_TIMEOUT == gle )
 			{
-				CRASH_ASSERT( nullptr != theClient );
+				CRASH_ASSERT( nullptr != theClient ); ///# ret==TRUE 이고, dwTransferred==0이고, TIMEOUT인 경우에 context가 null인 경우가 있을 수 있다.
 
 				theClient->DisconnectRequest( DR_ONCONNECT_ERROR );
 
