@@ -5,11 +5,6 @@
 #include "IocpManager.h"
 #include "SessionManager.h"
 
-FastSpinlock OverlappedSendContext::mLock;
-FastSpinlock OverlappedRecvContext::mLock;
-FastSpinlock OverlappedPreRecvContext::mLock;
-FastSpinlock OverlappedDisconnectContext::mLock;
-FastSpinlock OverlappedAcceptContext::mLock;
 
 OverlappedIOContext::OverlappedIOContext(ClientSession* owner, IOType ioType) 
 : mSessionObject(owner), mIoType(ioType)

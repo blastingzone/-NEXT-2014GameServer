@@ -46,7 +46,6 @@ struct OverlappedSendContext : public OverlappedIOContext, public ObjectPool<Ove
 	{
 	}
 
-	static FastSpinlock mLock;
 };
 
 struct OverlappedRecvContext : public OverlappedIOContext, public ObjectPool<OverlappedRecvContext>
@@ -55,7 +54,6 @@ struct OverlappedRecvContext : public OverlappedIOContext, public ObjectPool<Ove
 	{
 	}
 
-	static FastSpinlock mLock;
 };
 
 struct OverlappedPreRecvContext : public OverlappedIOContext, public ObjectPool<OverlappedPreRecvContext>
@@ -64,7 +62,6 @@ struct OverlappedPreRecvContext : public OverlappedIOContext, public ObjectPool<
 	{
 	}
 
-	static FastSpinlock mLock;
 };
 
 struct OverlappedDisconnectContext : public OverlappedIOContext, public ObjectPool<OverlappedDisconnectContext>
@@ -74,7 +71,6 @@ struct OverlappedDisconnectContext : public OverlappedIOContext, public ObjectPo
 	{}
 
 	DisconnectReason mDisconnectReason;
-	static FastSpinlock mLock;
 };
 
 struct OverlappedAcceptContext : public OverlappedIOContext, public ObjectPool<OverlappedAcceptContext>
@@ -82,7 +78,6 @@ struct OverlappedAcceptContext : public OverlappedIOContext, public ObjectPool<O
 	OverlappedAcceptContext(ClientSession* owner) : OverlappedIOContext(owner, IO_ACCEPT)
 	{}
 
-	static FastSpinlock mLock;
 };
 
 

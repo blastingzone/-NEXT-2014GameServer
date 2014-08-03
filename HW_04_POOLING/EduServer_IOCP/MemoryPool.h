@@ -98,6 +98,6 @@ void xdelete(T* object)
 	//delete(object)T;
 	object->~T();
 
-	GMemoryPool->Deallocate(object, 0);
-
+	//최근에 할당 받은 거에 관한 힌트라면 왠지 사이즈를 넣어주면 되지 않을까...
+	GMemoryPool->Deallocate(object, sizeof(T));
 }

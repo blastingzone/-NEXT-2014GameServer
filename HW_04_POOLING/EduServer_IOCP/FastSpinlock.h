@@ -39,14 +39,15 @@ class ClassTypeLock
 public:
 	struct LockGuard
 	{
+		//아래 네임 스페이스 삭제해야 할 듯 해서 삭제
 		LockGuard()
 		{
-			TargetClass::mLock.EnterLock();
+			mLock.EnterLock();
 		}
 
 		~LockGuard()
 		{
-			TargetClass::mLock.LeaveLock();
+			mLock.LeaveLock();
 		}
 
 	};
