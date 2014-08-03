@@ -92,7 +92,7 @@ void* MemoryPool::Allocate(int size)
 	else
 	{
 		//TODO: SmallSizeMemoryPool에서 할당
-		header = mSmallSizeMemoryPoolTable[size]->Pop();
+		header = mSmallSizeMemoryPoolTable[realAllocSize]->Pop();
 	}
 
 	return AttachMemAllocInfo(header, realAllocSize);
