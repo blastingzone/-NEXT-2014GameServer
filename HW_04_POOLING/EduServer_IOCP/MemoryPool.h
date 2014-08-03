@@ -71,7 +71,14 @@ extern MemoryPool* GMemoryPool;
 
 
 /// 요놈을 상속 받아야만 xnew/xdelete 사용할 수 있게...
-struct PooledAllocatable {};
+struct PooledAllocatable {
+private:
+	// 일반 new를 못 쓰게 하고 싶었는데 이러니까 템플릿도 안돌아간다 ㅋㅋ
+// 	void * operator new		( size_t size, ... ){};
+// 	void * operator new[]	( size_t size, ... ){};
+// 	void   operator delete	( void * ){};
+// 	void   operator delete[]( void* ){};
+};
 
 
 template <class T, class... Args>
@@ -98,6 +105,6 @@ void xdelete(T* object)
 	//delete(object)T;
 	object->~T();
 
-	//최근에 할당 받은 거에 관한 힌트라면 왠지 사이즈를 넣어주면 되지 않을까...
+	//최근에 할당 받은 거에 관한 힌트라면 왠지 사이즈를 넣어주면 되지 않을까... //안에서도 안 쓰는듯?
 	GMemoryPool->Deallocate(object, sizeof(T));
 }
