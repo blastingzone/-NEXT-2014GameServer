@@ -5,8 +5,8 @@
 #include "ClientSession.h"
 #include "SessionManager.h"
 
-#define GQCS_TIMEOUT	INFINITE //20
-//#define GQCS_TIMEOUT	20
+//#define GQCS_TIMEOUT	INFINITE //20
+#define GQCS_TIMEOUT	20
 
 __declspec(thread) int LIoThreadId = 0;
 IocpManager* GIocpManager = nullptr;
@@ -192,7 +192,7 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 			int gle = GetLastError();
 
 			//TODO: check time out first ... GQCS 타임 아웃의 경우는 어떻게?
-			if ( WAIT_TIMEOUT == gle )
+			if (context == nullptr && WAIT_TIMEOUT == gle)
 				continue;
 		
 			if (context->mIoType == IO_RECV || context->mIoType == IO_SEND )
