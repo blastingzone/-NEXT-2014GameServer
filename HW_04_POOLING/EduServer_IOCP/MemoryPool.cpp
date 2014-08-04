@@ -15,7 +15,7 @@ MemAllocInfo* SmallSizeMemoryPool::Pop()
 {
 	//TODO: InterlockedPopEntrySList를 이용하여 mFreeList에서 pop으로 메모리를 가져올 수 있는지 확인. 
 	MemAllocInfo* mem = reinterpret_cast<MemAllocInfo*>(
-		InterlockedPopEntrySList(reinterpret_cast<PSLIST_HEADER>(this))); ///# (MemAllocInfo*)InterlockedPopEntrySList(&mFreeList);
+		InterlockedPopEntrySList(&mFreeList)); ///# (MemAllocInfo*)InterlockedPopEntrySList(&mFreeList);
 
 	if (NULL == mem)
 	{
@@ -34,7 +34,8 @@ MemAllocInfo* SmallSizeMemoryPool::Pop()
 void SmallSizeMemoryPool::Push(MemAllocInfo* ptr)
 {
 	//TODO: InterlockedPushEntrySList를 이용하여 메모리풀에 (재사용을 위해) 반납.
-	InterlockedPushEntrySList(reinterpret_cast<PSLIST_HEADER>(this), ptr); ///# InterlockedPushEntrySList(&mFreeList, (PSLIST_ENTRY)ptr);
+	//reinterpret?
+	InterlockedPushEntrySList(&mFreeList, reinterpret_cast<PSLIST_ENTRY>(ptr)); ///# InterlockedPushEntrySList(&mFreeList, (PSLIST_ENTRY)ptr);
 	InterlockedDecrement(&mAllocCount);
 }
 
@@ -68,7 +69,7 @@ MemoryPool::MemoryPool()
 
 	//TODO: [2048, 4096] 범위 내에서 256바이트 단위로 SmallSizeMemoryPool을 할당하고 
 	//TODO: mSmallSizeMemoryPoolTable에 O(1) access가 가능하도록 SmallSizeMemoryPool의 주소 기록
-	for (int i = 2048; i < 4096; i += 256) ///# 이거는 지금 [2048, 4096)으로 된거다..
+	for (int i = 2048; i <= 4096; i += 256)
 	{
 		SmallSizeMemoryPool* pool = new SmallSizeMemoryPool(i);
 		for (int j = recent + 1; j <= i; ++j)
@@ -104,7 +105,6 @@ void MemoryPool::Deallocate(void* ptr, long extraInfo)
 	header->mExtraInfo = extraInfo; ///< 최근 할당에 관련된 정보 힌트
 	
 	long realAllocSize = InterlockedExchange(&header->mAllocSize, 0); ///< 두번 해제 체크 위해
-	
 	CRASH_ASSERT(realAllocSize> 0);
 
 	if (realAllocSize > MAX_ALLOC_SIZE)

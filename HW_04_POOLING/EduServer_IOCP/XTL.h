@@ -47,14 +47,16 @@ public:
 	{
 		//TODO: 메모리풀에서 할당해서 리턴
 		//return static_cast<T*>(malloc(n*sizeof(T)));
-		return static_cast<T*>(GMemoryPool->Allocate(n*sizeof(T))); ///# 컴파일 경고 잡도록.
+		CRASH_ASSERT(GMemoryPool != nullptr);
+		return static_cast<T*>(GMemoryPool->Allocate((int)n*sizeof(T))); ///# 컴파일 경고 잡도록.
 	}
 
 	void deallocate(T* ptr, size_t n)
 	{
 		//TODO: 메모리풀에 반납
 		//free(ptr);
-		GMemoryPool->Deallocate(ptr, 0);
+		CRASH_ASSERT(GMemoryPool != nullptr);
+		GMemoryPool->Deallocate(ptr, sizeof(T));
 	}
 };
 
@@ -113,7 +115,8 @@ struct xpriority_queue
 {
 	//TODO: STL 할당자 사용하는 priority_queue을  type으로 선언
 	//typedef ... type;
-	typedef std::priority_queue<T, xvector<T>, C> type; ///# typedef std::priority_queue<T, std::vector<T, STLAllocator<T>>, C> type;
+	///# typedef std::priority_queue<T, std::vector<T, STLAllocator<T>>, C> type;
+	typedef std::priority_queue<T, xvector<T>, C> type; 
 };
 
 typedef std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>> xstring;
