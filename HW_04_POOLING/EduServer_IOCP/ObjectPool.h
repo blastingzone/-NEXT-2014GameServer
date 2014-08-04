@@ -6,12 +6,14 @@
 
 
 template <class TOBJECT, int ALLOC_COUNT = 100>
-class ObjectPool
+class ObjectPool ///#  : public ClassTypeLock<TOBJECT> 이렇게 상속 받아 사용
 {
 public:
 
 	static void* operator new(size_t objSize)
 	{
+		///# LockGuard criticalSection;
+
 		//TODO: TOBJECT 타입 단위로 lock 잠금
 		ClassTypeLock<TOBJECT>::LockGuard lock;
 
