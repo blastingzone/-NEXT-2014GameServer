@@ -121,8 +121,11 @@ int main( void )
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
-		SOCKET Socket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
-		if ( Socket == INVALID_SOCKET )
+		Client_Session* clientSession = new Client_Session();
+		ZeroMemory( clientSession, sizeof( Client_Session ) );
+
+		clientSession->m_Socket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
+		if ( clientSession->m_Socket == INVALID_SOCKET )
 		{
 			printf_s( "Socket Create Error! %d \n", WSAGetLastError() );
 			return 0;
@@ -133,36 +136,33 @@ int main( void )
 		SockAddr.sin_addr.s_addr = inet_addr( "127.0.0.1" ); //local network
 		SockAddr.sin_port = htons( 9001 );
 
-		CreateIoCompletionPort( (HANDLE)Socket, hCompletionPort, 0, 0 );
+		CreateIoCompletionPort( (HANDLE)(clientSession->m_Socket), hCompletionPort, 0, 0 );
 
-		if ( WSAConnect( Socket, (SOCKADDR*)( &SockAddr ), sizeof( SockAddr ), NULL, NULL, NULL, NULL ) == SOCKET_ERROR )
+		if ( WSAConnect( clientSession->m_Socket, (SOCKADDR*)( &SockAddr ), sizeof( SockAddr ), NULL, NULL, NULL, NULL ) == SOCKET_ERROR )
 		{
 			printf_s( "Connection Error! %d \n",WSAGetLastError() );
 			return 0;
 		}
 
-		Client_Session* clientSession = new Client_Session();
-		ZeroMemory( clientSession, sizeof( Client_Session ) );
 
-		clientSession->m_Socket = Socket;
 		clientSession->m_Overlapped.hEvent = WSACreateEvent();
 		//clientSession->m_WsaBuf.buf = clientSession->m_Buffer;
 		//clientSession->m_WsaBuf.len = sizeof( clientSession->m_WsaBuf );
 		
 		// id 할당
-		clientSession->m_SessionId = i % 10;
+		clientSession->m_SessionId = i % 10 + 1;
 
 		// send 버퍼에 글자 채우기
 		for ( int j = 0; j < TOTAL_MESSAGE_BYTE / MAX_CONNECTION; ++j )
 		{
-			clientSession->m_SendBuffer[j] = i;
+			clientSession->m_SendBuffer[j] = clientSession->m_SessionId;
 		}
 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
 		clientSession->m_WsaBuf.buf = clientSession->m_SendBuffer;
 		clientSession->m_WsaBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
 
 		DWORD sendByte = 0;
-		if ( SOCKET_ERROR == WSASend( Socket, &clientSession->m_WsaBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
 		{
 			if ( WSAGetLastError() != WSA_IO_PENDING )
 			{
@@ -178,6 +178,7 @@ int main( void )
 			AcquireSRWLockExclusive( &g_pLock );
 
 			g_SendedDataByte += sendByte;
+			printf_s( "Data Send OK \n" );
 
 			ReleaseSRWLockExclusive( &g_pLock );
 		}
