@@ -10,6 +10,7 @@ public:
 	
 	void Push(FastSpinlock* lock);
 	void Pop(FastSpinlock* lock);
+	bool IsTopPos(FastSpinlock* lock);
 
 private:
 	enum 

@@ -37,3 +37,8 @@ void LockOrderChecker::Pop(FastSpinlock* lock)
 	mLockStack[--mStackTopPos] = nullptr;
 
 }
+
+bool LockOrderChecker::IsTopPos(FastSpinlock* lock)
+{
+	return mLockStack[mStackTopPos - 1] == lock;
+}
