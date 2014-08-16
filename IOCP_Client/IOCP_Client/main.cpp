@@ -6,13 +6,14 @@
 
 #define MAX_CONNECTION 20
 #define TOTAL_MESSAGE_BYTE 2000
-#define TIMEOUT_MILLISECOND 2000
+#define TIMEOUT_MILLISECOND 20000
 
 typedef struct
 {
 	WSAOVERLAPPED m_Overlapped;
 	SOCKET	m_Socket;
-	WSABUF m_WsaBuf;
+	WSABUF m_WsaSendBuf;
+	WSABUF m_WsaRecvBuf;
 	char m_RecvBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION];
 	char m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION];
 	DWORD m_Flag;
@@ -20,7 +21,7 @@ typedef struct
 
 } Client_Session;
 
-#define IOCP_WAIT_TIME INFINITE
+#define IOCP_WAIT_TIME 20
 
 SRWLOCK g_pLock;
 
@@ -35,11 +36,17 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 	HANDLE hCompletionPort = (HANDLE)lpParameter;
 	DWORD dwByteRecv = 0;
 	ULONG completionKey = 0;
-	Client_Session* clientSession;
+	Client_Session* clientSession = nullptr;
 	
 	while ( true )
 	{
 		int ret = GetQueuedCompletionStatus( hCompletionPort, &dwByteRecv, &completionKey, (LPOVERLAPPED*)&clientSession, IOCP_WAIT_TIME );
+
+		if ( clientSession = nullptr );
+		{
+			//printf_s( "GetQuedCompletionStatus Err\n" );
+			continue;
+		}
 
 		if ( ret == 0 || dwByteRecv == 0 )
 		{
@@ -49,10 +56,8 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 		}
 		else
 		{
-			clientSession->m_WsaBuf.buf = clientSession->m_RecvBuffer;
-			clientSession->m_WsaBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
 			clientSession->m_Flag = 0;
-			int ret = WSARecv( clientSession->m_Socket, &( clientSession->m_WsaBuf ), 1, &dwByteRecv, &clientSession->m_Flag, &( clientSession->m_Overlapped ), NULL );
+			int ret = WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, &( clientSession->m_Overlapped ), NULL );
 			if ( ret == 0 )
 			{
 				AcquireSRWLockExclusive( &g_pLock );
@@ -60,10 +65,10 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 				g_RecvedDataByte += dwByteRecv;
 				if ( g_TestCount < 9 )
 				{
-					if ( clientSession->m_WsaBuf.buf[0] == clientSession->m_SessionId )
+					if ( clientSession->m_WsaRecvBuf.buf[0] == clientSession->m_SessionId )
 					{
 						printf_s( "Echo Data OK \n" );
-						printf_s( "%s \n", clientSession->m_WsaBuf.buf );
+						printf_s( "%s \n", clientSession->m_WsaRecvBuf.buf );
 					}
 					else
 					{
@@ -86,8 +91,10 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 		closesocket( clientSession->m_Socket );
 		break;
 	}
-
-	delete clientSession;
+	if ( clientSession != nullptr )
+	{
+		delete clientSession;
+	}
 	
 	return 0;
 }
@@ -136,7 +143,11 @@ int main( void )
 		SockAddr.sin_addr.s_addr = inet_addr( "127.0.0.1" ); //local network
 		SockAddr.sin_port = htons( 9001 );
 
-		CreateIoCompletionPort( (HANDLE)(clientSession->m_Socket), hCompletionPort, 0, 0 );
+		if ( hCompletionPort != CreateIoCompletionPort( (HANDLE)( clientSession->m_Socket ), hCompletionPort, (ULONG_PTR)clientSession, 0 ) )
+		{
+			printf_s( "Create Io Completion Port Error : %d \n", GetLastError() );
+		}
+
 
 		if ( WSAConnect( clientSession->m_Socket, (SOCKADDR*)( &SockAddr ), sizeof( SockAddr ), NULL, NULL, NULL, NULL ) == SOCKET_ERROR )
 		{
@@ -158,11 +169,14 @@ int main( void )
 			clientSession->m_SendBuffer[j] = clientSession->m_SessionId;
 		}
 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
-		clientSession->m_WsaBuf.buf = clientSession->m_SendBuffer;
-		clientSession->m_WsaBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
+		clientSession->m_WsaSendBuf.buf = clientSession->m_SendBuffer;
+		clientSession->m_WsaSendBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
+
+		clientSession->m_WsaRecvBuf.buf = clientSession->m_RecvBuffer;
+		clientSession->m_WsaRecvBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
 
 		DWORD sendByte = 0;
-		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
 		{
 			if ( WSAGetLastError() != WSA_IO_PENDING )
 			{
