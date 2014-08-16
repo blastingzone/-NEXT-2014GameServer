@@ -2,6 +2,7 @@
 #include <winsock2.h>
 #include <stdio.h>
 #include <vector>
+#include <process.h>
 #pragma comment(lib, "ws2_32.lib") 
 
 #define MAX_CONNECTION 20
@@ -10,7 +11,7 @@
 
 typedef struct
 {
-	WSAOVERLAPPED m_Overlapped;
+	OVERLAPPED m_Overlapped;
 	SOCKET	m_Socket;
 	WSABUF m_WsaSendBuf;
 	WSABUF m_WsaRecvBuf;
@@ -31,34 +32,37 @@ DWORD g_SendedDataByte = 0;
 DWORD g_StartTimer;
 unsigned int g_TestCount = 0;
 
-static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
+static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 {
 	HANDLE hCompletionPort = (HANDLE)lpParameter;
 	DWORD dwByteRecv = 0;
 	ULONG completionKey = 0;
 	Client_Session* clientSession = nullptr;
-	
+
+
 	while ( true )
 	{
-		int ret = GetQueuedCompletionStatus( hCompletionPort, &dwByteRecv, &completionKey, (LPOVERLAPPED*)&clientSession, IOCP_WAIT_TIME );
+		dwByteRecv = 0;
+		completionKey = 0;
+		clientSession = nullptr;
 
-		if ( clientSession = nullptr );
-		{
-			//printf_s( "GetQuedCompletionStatus Err\n" );
-			continue;
-		}
+		int ret = GetQueuedCompletionStatus( hCompletionPort, &dwByteRecv, (PULONG_PTR)&completionKey, (LPOVERLAPPED*)&clientSession, IOCP_WAIT_TIME );
 
 		if ( ret == 0 || dwByteRecv == 0 )
 		{
-			int err = GetLastError();
-
-			printf_s( "Connection Failed : %d \n", GetLastError() );
+			if ( WSAGetLastError() == WAIT_TIMEOUT )
+			{
+				continue;
+			}
+			else
+			{
+				printf_s( "Connection Failed : %d \n", WSAGetLastError() );
+			}
 		}
 		else
 		{
 			clientSession->m_Flag = 0;
-			int ret = WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, &( clientSession->m_Overlapped ), NULL );
-			if ( ret == 0 )
+			if ( !WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, (LPWSAOVERLAPPED)( clientSession ), NULL ) )
 			{
 				AcquireSRWLockExclusive( &g_pLock );
 
@@ -68,7 +72,8 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 					if ( clientSession->m_WsaRecvBuf.buf[0] == clientSession->m_SessionId )
 					{
 						printf_s( "Echo Data OK \n" );
-						printf_s( "%s \n", clientSession->m_WsaRecvBuf.buf );
+						// 켰더니 지옥됨
+						//printf_s( "%s \n", clientSession->m_WsaRecvBuf.buf );
 					}
 					else
 					{
@@ -88,8 +93,11 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 			}
 		}
 		// disconnect
-		closesocket( clientSession->m_Socket );
-		break;
+		if ( clientSession )
+		{
+			closesocket( clientSession->m_Socket );
+			break;
+		}
 	}
 	if ( clientSession != nullptr )
 	{
@@ -118,12 +126,6 @@ int main( void )
 	SYSTEM_INFO si;
 	GetSystemInfo( &si );
 
-	for ( DWORD i = 0; i < si.dwNumberOfProcessors; ++i )
-	{
-		HANDLE hThread = CreateThread( NULL, 0, ClientWorkerThread, hCompletionPort, 0, NULL );
-		CloseHandle( hThread );
-	}
-
 	std::vector<Client_Session*> m_sessionList;
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
@@ -139,6 +141,7 @@ int main( void )
 		}
 
 		SOCKADDR_IN SockAddr;
+		ZeroMemory( &SockAddr, sizeof( SockAddr ) );
 		SockAddr.sin_family = AF_INET;
 		SockAddr.sin_addr.s_addr = inet_addr( "127.0.0.1" ); //local network
 		SockAddr.sin_port = htons( 9001 );
@@ -154,7 +157,6 @@ int main( void )
 			printf_s( "Connection Error! %d \n",WSAGetLastError() );
 			return 0;
 		}
-
 
 		clientSession->m_Overlapped.hEvent = WSACreateEvent();
 		//clientSession->m_WsaBuf.buf = clientSession->m_Buffer;
@@ -174,8 +176,8 @@ int main( void )
 
 		clientSession->m_WsaRecvBuf.buf = clientSession->m_RecvBuffer;
 		clientSession->m_WsaRecvBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
-
 		DWORD sendByte = 0;
+
 		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
 		{
 			if ( WSAGetLastError() != WSA_IO_PENDING )
@@ -184,7 +186,7 @@ int main( void )
 				delete clientSession;
 				printf_s( "ClientSession::PostSend Error : %d\n", GetLastError() );
 
-				return false;
+				return -1;
 			}
 		}
 		else
@@ -196,6 +198,14 @@ int main( void )
 
 			ReleaseSRWLockExclusive( &g_pLock );
 		}
+		
+	}
+
+	for ( DWORD i = 0; i < si.dwNumberOfProcessors; ++i )
+	{
+		DWORD dwThreadId;
+		HANDLE hThread = (HANDLE)_beginthreadex( NULL, 0, ClientWorkerThread, hCompletionPort, 0, (unsigned int*)&dwThreadId );
+		CloseHandle( hThread );
 	}
 
 	// 타이머 초기화
@@ -206,7 +216,7 @@ int main( void )
 		Sleep( 100 );
 	}
 
-	// 귀신이 곡할 노릇일세.. 왜 보낸 거보다 돌아오는게 많지 ㅋㅋㅋ
+	// 이젠 데이터를 못 받기 시작
 	printf_s( "Time Passed : %f \n", g_StartTimer / 1000.f );
 	printf_s( "Send Data : %d (maybe...) \n", TOTAL_MESSAGE_BYTE );
 	printf_s( "Real Send Data : %d \n", g_SendedDataByte );
