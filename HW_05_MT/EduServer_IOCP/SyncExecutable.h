@@ -38,7 +38,7 @@ public:
 		//(HINT: 이 클래스는 std::enable_shared_from_this에서 상속받았다. 그리고 static_pointer_cast 사용)
 
 		//return std::shared_ptr<T>((Player*)this); ///< 이렇게 하면 안될걸???
-		//왜안될까?
+		//
 		return std::static_pointer_cast<T>(shared_from_this());
  	}
 
@@ -49,6 +49,7 @@ private:
 
 
 template <class T, class F, class... Args>
+//세션에서 해당함수 호출
 void DoSyncAfter(uint32_t after, T instance, F memfunc, Args&&... args)
 {
 	static_assert(true == is_shared_ptr<T>::value, "T should be shared_ptr");

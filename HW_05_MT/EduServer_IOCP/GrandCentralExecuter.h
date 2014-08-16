@@ -61,6 +61,13 @@ void GCEDispatch(T instance, F memfunc, Args&&... args)
 	static_assert(true == is_shared_ptr<T>::value, "T should be shared_ptr");
 
 	//TODO: intance의 memfunc를 std::bind로 묶어서 전달
+	//T&& -> 오로지 우측에만 올 수 있는 타입 rvalue
+	//vector 등에서 기존의 크기보다 더 큰 크기가 필요할 때 
+	//기존의 메모리를 삭제하고 임시메모리를 할당하는 등의 불필요한 연산이 일어남
+	//이를 방지하기 위해 생겨남
+	//다양한 c++ value들 http://en.cppreference.com/w/cpp/language/value_category
+	//템플릿사용시 인자추론으로 인해 템플릿 사용시 rvalue와 lvalue의 경계가 모호해져 버린다. 
+	//forward는 rvalue는 rvalue로 lvalue는 lvalue로 캐스팅하여 템플릿이 해깔리지 않게 해준다.
 	auto task = std::bind(memfunc, instance, std::forward<Args>(args)...);
 	GGrandCentralExecuter->DoDispatch(task);
 }

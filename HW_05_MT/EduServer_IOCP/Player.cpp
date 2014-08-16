@@ -49,6 +49,14 @@ void Player::OnTick()
 	/// 랜덤으로 이벤트를 발생시켜보기 (예: 다른 모든 플레이어에게 버프 주기)
 	//이걸 늘리면 버그를 찾을 수 있을 듯하군
 	if (rand() % 100 == 0) ///< 1% 확률
+	//가끔 LockOrder에서 뻑이남 처음에 몇번나고 안나서 짜증남
+	//tick에 있는 lock에서 뻑이남
+	//덤프파일 남기기 성공 LockOrder의 pop순서에서 뻑이남
+	//timer에서 owner의 lock을 사용 task실행후 어 leavelock하니 이전에 걸었던 락하고 다르네?
+	//1.task실행과정 중에 뭔가가 일어났다.
+	//2.다른 쓰레드에서 해당 owner의 lock을 건드렸다.
+	//!!!
+	//if (true)
 	{
 		int buffId = mPlayerId * 100;
 		int duration = (rand() % 3 + 2) * 1000;
