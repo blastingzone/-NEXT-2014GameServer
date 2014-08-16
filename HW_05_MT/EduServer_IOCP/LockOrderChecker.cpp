@@ -33,7 +33,7 @@ void LockOrderChecker::Pop(FastSpinlock* lock)
 	//TODO: 당연히 최근에 push했던 녀석이랑 같은지 체크.. 틀리면 CRASH_ASSERT
 	if (mLockStack[mStackTopPos - 1] != lock)
 		CRASH_ASSERT(false);
-
+		
 	mLockStack[--mStackTopPos] = nullptr;
 
 }
