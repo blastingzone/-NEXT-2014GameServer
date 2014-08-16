@@ -13,7 +13,7 @@ typedef struct
 	WSAOVERLAPPED m_Overlapped;
 	SOCKET	m_Socket;
 	WSABUF m_WsaBuf;
-	char m_Buffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION];
+	char m_RecvBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION];
 	char m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION];
 	DWORD m_Flag;
 	int m_SessionId;
@@ -49,10 +49,11 @@ static DWORD WINAPI ClientWorkerThread( LPVOID lpParameter )
 		}
 		else
 		{
+			clientSession->m_WsaBuf.buf = clientSession->m_RecvBuffer;
 			clientSession->m_WsaBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
 			clientSession->m_Flag = 0;
-
-			if ( WSARecv( clientSession->m_Socket, &( clientSession->m_WsaBuf ), 1, &dwByteRecv, &clientSession->m_Flag, &( clientSession->m_Overlapped ), NULL ) )
+			int ret = WSARecv( clientSession->m_Socket, &( clientSession->m_WsaBuf ), 1, &dwByteRecv, &clientSession->m_Flag, &( clientSession->m_Overlapped ), NULL );
+			if ( ret == 0 )
 			{
 				AcquireSRWLockExclusive( &g_pLock );
 
