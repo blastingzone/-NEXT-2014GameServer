@@ -69,10 +69,11 @@ void Player::OnTick()
 
 	//TODO: AllPlayerBuffDecay::CheckBuffTimeout를 GrandCentralExecuter를 통해 실행
 	//make_shared이거 메모리 할당 아닌가? 그럼 풀에서 받아와야하는 것 아닌가?
+	//뜯어보니 stl에서 만들어진 객체(_Ref_count_obj)에 할당하고 있는 것 같다.
+	//allocate_shared를 이용하면 가능하다고 한다.(make_shared와 같은 기능을 하는 것 같다)
 	//make_shared 하나의 메모리 블럭안에 포인터와 객체를 담는다.
 	auto playerDecay = std::make_shared<AllPlayerBuffDecay>();
 	GCEDispatch(playerDecay, &AllPlayerBuffDecay::CheckBuffTimeout);
-	
 	
 	if (mHeartBeat > 0)
 		DoSyncAfter(mHeartBeat, GetSharedFromThis<Player>(), &Player::OnTick);
