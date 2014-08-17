@@ -55,7 +55,7 @@ void Player::OnTick()
 	//timer에서 owner의 lock을 사용 task실행후 어 leavelock하니 이전에 걸었던 락하고 다르네?
 	//1.task실행과정 중에 뭔가가 일어났다.
 	//2.다른 쓰레드에서 해당 owner의 lock을 건드렸다.
-	//LockOrder는 싱글쓰래드처럼 작동
+	//FastSpinLock에 LockOrderCheck에서 문제가 있는 것 같다.
 	if (true)
 	{
 		int buffId = mPlayerId * 100;
