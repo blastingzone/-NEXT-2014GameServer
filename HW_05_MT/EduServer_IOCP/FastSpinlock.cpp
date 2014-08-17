@@ -27,10 +27,6 @@ void FastSpinlock::EnterWriteLock()
 		while (mLockFlag & LF_WRITE_MASK)
 			YieldProcessor();
 
-		//스텍의 위부터 크리티컬 세션에 들어갈 수 있도록 보장
-		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false))
-			YieldProcessor();
-
 		if ((InterlockedAdd(&mLockFlag, LF_WRITE_FLAG) & LF_WRITE_MASK) == LF_WRITE_FLAG)
 		{
 			/// 다른놈이 readlock 풀어줄때까지 기다린다.
@@ -64,10 +60,6 @@ void FastSpinlock::EnterReadLock()
 	{
 		/// 다른놈이 writelock 풀어줄때까지 기다린다.
 		while (mLockFlag & LF_WRITE_MASK)
-			YieldProcessor();
-
-		//스텍의 위부터 크리티컬 세션에 들어갈 수 있도록 보장
-		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false))
 			YieldProcessor();
 
 		//TODO: Readlock 진입 구현 (mLockFlag를 어떻게 처리하면 되는지?)
