@@ -29,11 +29,6 @@ void FastSpinlock::EnterWriteLock()
 		while (mLockFlag & LF_WRITE_MASK)
 			YieldProcessor();
 
-		//스텍의 위부터 크리티컬 세션에 들어갈 수 있도록 보장
-		//일단 임시방편으로 해놈
-		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false))
-			YieldProcessor();
-
 		//만약 스텍에 push된 역순이 아닌 다른 순서가 경합에서 이겨버린다면?
 		if ((InterlockedAdd(&mLockFlag, LF_WRITE_FLAG) & LF_WRITE_MASK) == LF_WRITE_FLAG)
 		{
@@ -69,10 +64,6 @@ void FastSpinlock::EnterReadLock()
 		/// 다른놈이 writelock 풀어줄때까지 기다린다.
 		while (mLockFlag & LF_WRITE_MASK)
 			YieldProcessor();
-
-		//스텍의 위부터 크리티컬 세션에 들어갈 수 있도록 보장
-		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false)) ///# 으잉 이건 왜? 의미 없는데..
-			YieldProcessor(); 
 
 		//TODO: Readlock 진입 구현 (mLockFlag를 어떻게 처리하면 되는지?)
 		if ((InterlockedIncrement(&mLockFlag) & LF_WRITE_MASK) != LF_WRITE_FLAG)  ///# if ((InterlockedIncrement(&mLockFlag) & LF_WRITE_MASK) == 0) 이게 더 깔끔
