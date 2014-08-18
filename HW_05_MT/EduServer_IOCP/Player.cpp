@@ -72,6 +72,9 @@ void Player::OnTick()
 	//뜯어보니 stl에서 만들어진 객체(_Ref_count_obj)에 할당하고 있는 것 같다.
 	//allocate_shared를 이용하면 가능하다고 한다.(make_shared와 같은 기능을 하는 것 같다)
 	//make_shared 하나의 메모리 블럭안에 포인터와 객체를 담는다.
+
+	///# 그래 정석대로라면 풀에서 받는게 맞지..
+
 	auto playerDecay = std::make_shared<AllPlayerBuffDecay>();
 	GCEDispatch(playerDecay, &AllPlayerBuffDecay::CheckBuffTimeout);
 	

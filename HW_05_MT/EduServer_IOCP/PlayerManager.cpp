@@ -32,7 +32,7 @@ int PlayerManager::GetCurrentPlayers(PlayerList& outList)
 	FastSpinlockGuard readLock(mLock, false);
 
 	int total = 0;
-	for (auto iter : mPlayerMap)
+	for (auto iter : mPlayerMap) ///# 이왕이면 참조로 해야 복사가 안일어나지..
 	{
 		outList.push_back(iter.second);
 		++total;

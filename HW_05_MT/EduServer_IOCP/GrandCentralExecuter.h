@@ -35,6 +35,9 @@ public:
 				{
 					//TODO: task를 수행하고 mRemainTaskCount를 하나 감소 
 					// mRemainTaskCount가 0이면 break;
+
+					task(); ///# 이거 해줘야지
+
 					if (InterlockedDecrement64(&mRemainTaskCount) == 0)
 						break;
 				}
@@ -68,6 +71,9 @@ void GCEDispatch(T instance, F memfunc, Args&&... args)
 	//다양한 c++ value들 http://en.cppreference.com/w/cpp/language/value_category
 	//템플릿사용시 인자추론으로 인해 템플릿 사용시 rvalue와 lvalue의 경계가 모호해져 버린다. 
 	//forward는 rvalue는 rvalue로 lvalue는 lvalue로 캐스팅하여 템플릿이 해깔리지 않게 해준다.
+
+	///# very good!
+
 	auto task = std::bind(memfunc, instance, std::forward<Args>(args)...);
 	GGrandCentralExecuter->DoDispatch(task);
 }

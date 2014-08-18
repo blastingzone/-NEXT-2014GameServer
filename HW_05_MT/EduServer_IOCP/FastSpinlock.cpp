@@ -71,11 +71,11 @@ void FastSpinlock::EnterReadLock()
 			YieldProcessor();
 
 		//스텍의 위부터 크리티컬 세션에 들어갈 수 있도록 보장
-		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false))
-			YieldProcessor();
+		if ((mLockOrder != LO_DONT_CARE) && (LLockOrderChecker->IsTopPos(this) == false)) ///# 으잉 이건 왜? 의미 없는데..
+			YieldProcessor(); 
 
 		//TODO: Readlock 진입 구현 (mLockFlag를 어떻게 처리하면 되는지?)
-		if ((InterlockedIncrement(&mLockFlag) & LF_WRITE_MASK) != LF_WRITE_FLAG)
+		if ((InterlockedIncrement(&mLockFlag) & LF_WRITE_MASK) != LF_WRITE_FLAG)  ///# if ((InterlockedIncrement(&mLockFlag) & LF_WRITE_MASK) == 0) 이게 더 깔끔
 			return;
 		else
 			InterlockedDecrement(&mLockFlag);
