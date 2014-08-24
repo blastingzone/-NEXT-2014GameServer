@@ -140,7 +140,7 @@ bool DbHelper::BindParamInt(int* param)
 {
 	//todo: int형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_LONG, SQL_REAL, 15, 0, param, 0, NULL);
+		SQL_C_LONG, SQL_IS_INTEGER, 0, 0, param, 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -169,7 +169,7 @@ bool DbHelper::BindParamBool(bool* param)
 {
 	//todo: bool형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_TINYINT, SQL_REAL, 15, 0, param, 0, NULL);
+		SQL_C_BIT, SQL_BIT, 0, 0, param, 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -182,10 +182,10 @@ bool DbHelper::BindParamBool(bool* param)
 
 bool DbHelper::BindParamText(const wchar_t* text)
 {
-
 	//todo: 유니코드 문자열 바인딩
+	size_t len = wcslen(text);
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_WCHAR, SQL_REAL, 15, 0, const_cast<wchar_t*>(text), 0, NULL);
+		SQL_WCHAR, SQL_WVARCHAR, len, 0, const_cast<wchar_t*>(text), 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
