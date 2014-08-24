@@ -54,8 +54,12 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 	for (int i = 0; i < mDbWorkerThreadCount; ++i)
 	{
 		//todo: SQLAllocHandle을 이용하여 SQL_CONN의 mSqlHdbc 핸들 사용가능하도록 처리
-		//에러처리 해야함
-		SQLAllocHandle(SQL_HANDLE_DBC, mSqlHenv, &(mSqlConnPool->mSqlHdbc));
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, mSqlHenv, &(mSqlConnPool->mSqlHdbc)))
+		{
+			printf_s("DbHelper Initialize SQLAllocHandle SQL_HANDLE_DBC failed\n");
+			return false;
+		}
+
 		SQLSMALLINT resultLen = 0;
 		
 		//todo: SQLDriverConnect를 이용하여 SQL서버에 연결하고 그 핸들을 SQL_CONN의 mSqlHdbc에 할당
@@ -73,13 +77,16 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 			SQLGetDiagRec(SQL_HANDLE_DBC, mSqlConnPool[i].mSqlHdbc, 1, sqlState, &nativeError, msgText, 1024, &textLen);
 
 			wprintf_s(L"DbHelper Initialize SQLDriverConnect failed: %s \n", msgText);
-
+			system("pause");
 			return false;
 		}
 
 		//todo: SQLAllocHandle를 이용하여 SQL_CONN의 mSqlHstmt 핸들 사용가능하도록 처리
-		//에러처리해야함
-		SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool->mSqlHdbc, &(mSqlConnPool->mSqlHstmt));
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool->mSqlHdbc, &(mSqlConnPool->mSqlHstmt)))
+		{
+			printf_s("DbHelper Initialize SQLAllocHandle SQL_HANDLE_STMT failed\n");
+			return false;
+		}
 	}
 
 	return true;

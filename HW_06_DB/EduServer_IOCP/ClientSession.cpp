@@ -5,6 +5,7 @@
 #include "ClientSession.h"
 #include "IocpManager.h"
 #include "ClientSessionManager.h"
+#include "SQLTest.h"
 
 #define CLIENT_BUFSIZE	65536
 
@@ -136,6 +137,9 @@ void ClientSession::AcceptCompletion()
 	{
 		printf_s("[DEBUG] PreRecv error: %d\n", GetLastError());
 	}
+
+	//DBtest
+	DbTestFunc();
 }
 
 
