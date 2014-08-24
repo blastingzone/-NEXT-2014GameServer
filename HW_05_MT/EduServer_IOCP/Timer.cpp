@@ -24,7 +24,8 @@ void Timer::PushTimerJob(SyncExecutablePtr owner, const TimerTask& task, uint32_
 	int64_t dueTimeTick = after + LTickCount;
 	//mTimerJobQueue.push(TimerJobElement(owner, task, dueTimeTick));
 
-	//뻑이 났다 안났다 함
+	//일단 뻑나라고 넣은 코드
+	//뻑이 가끔씩 안날때가 있다.
 	static int testTemp = 10;
 	mTimerJobQueue.push(TimerJobElement(owner, task, testTemp--));
 }
@@ -45,13 +46,15 @@ void Timer::DoTimerJob()
 		// 락을 걸순 없을 듯(락내부에서 다시 호출하잖소)
 
 		//레퍼런스를 넘겨받은 이후
-		//sort가 일어난다면?
-		//
+		//sort가 일어나면서 문제가 발생하는 것 같다.
+		//일단 레퍼런스가 아닌 복사를 일으키면 뻑이 사라진다.
 		const TimerJobElement& timerJobElem = mTimerJobQueue.top(); 
 		
-		/*일단 이렇게만 해도 뻑은 안남
+		/*일단 아래처럼 해놓으니 뻑은 안난다.
 		const TimerJobElement timerJobElem = mTimerJobQueue.top();
 		mTimerJobQueue.pop();*/
+		//하지만 완벽하지 않은 것 같다.
+		//top과 pop이 동시에 이루어지는 자료구조가 필요할 듯 하다.
 
 		if (LTickCount < timerJobElem.mExecutionTick)
 			break;
