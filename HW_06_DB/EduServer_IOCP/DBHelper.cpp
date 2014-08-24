@@ -24,6 +24,7 @@ DbHelper::DbHelper()
 DbHelper::~DbHelper()
 {
 	//todo: SQLFreeStmt를 이용하여 현재 SQLHSTMT 해제(unbind, 파라미터리셋, close 순서로)
+	//순서가 문헌과 다르다
 	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_UNBIND);
 	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_RESET_PARAMS);
 	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_CLOSE);
@@ -54,7 +55,7 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 	for (int i = 0; i < mDbWorkerThreadCount; ++i)
 	{
 		//todo: SQLAllocHandle을 이용하여 SQL_CONN의 mSqlHdbc 핸들 사용가능하도록 처리
-		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, mSqlHenv, &(mSqlConnPool->mSqlHdbc)))
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_DBC, mSqlHenv, &mSqlConnPool[i].mSqlHdbc))
 		{
 			printf_s("DbHelper Initialize SQLAllocHandle SQL_HANDLE_DBC failed\n");
 			return false;
@@ -63,9 +64,8 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 		SQLSMALLINT resultLen = 0;
 		
 		//todo: SQLDriverConnect를 이용하여 SQL서버에 연결하고 그 핸들을 SQL_CONN의 mSqlHdbc에 할당
-		HWND desktopHandle = GetDesktopWindow();
-		SQLRETURN ret = SQLDriverConnect(mSqlConnPool->mSqlHdbc, desktopHandle,
-			SQL_SERVER_CONN_STR, SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT);
+		SQLRETURN ret = SQLDriverConnect(mSqlConnPool[i].mSqlHdbc, NULL,
+			const_cast<wchar_t*>(connInfoStr), SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT);
 
 		if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 		{
@@ -82,7 +82,7 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 		}
 
 		//todo: SQLAllocHandle를 이용하여 SQL_CONN의 mSqlHstmt 핸들 사용가능하도록 처리
-		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool->mSqlHdbc, &(mSqlConnPool->mSqlHstmt)))
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool->mSqlHdbc, &(mSqlConnPool[i].mSqlHstmt)))
 		{
 			printf_s("DbHelper Initialize SQLAllocHandle SQL_HANDLE_STMT failed\n");
 			return false;
@@ -147,7 +147,7 @@ bool DbHelper::BindParamInt(int* param)
 {
 	//todo: int형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_LONG, SQL_IS_INTEGER, 0, 0, param, 0, NULL);
+		SQL_C_LONG, SQL_IS_INTEGER, 10, 0, param, 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -176,7 +176,7 @@ bool DbHelper::BindParamBool(bool* param)
 {
 	//todo: bool형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_BIT, SQL_BIT, 0, 0, param, 0, NULL);
+		SQL_C_TINYINT, SQL_TINYINT, 1, 0, param, 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -218,8 +218,7 @@ void DbHelper::BindResultColumnFloat(float* r)
 {
 	SQLLEN len = 0;
 	//todo: float형 결과 컬럼 바인딩
-	//float - 4바이트
-	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_C_FLOAT, r, 4, &len);
+	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_C_FLOAT, r, 15, &len);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
