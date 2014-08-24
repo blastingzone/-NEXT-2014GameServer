@@ -25,9 +25,9 @@ DbHelper::~DbHelper()
 {
 	//todo: SQLFreeStmt를 이용하여 현재 SQLHSTMT 해제(unbind, 파라미터리셋, close 순서로)
 	//순서가 문헌과 다르다
-	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_UNBIND);
-	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_RESET_PARAMS);
-	SQLFreeStmt(mSqlConnPool[LWorkerThreadId].mSqlHstmt, SQL_CLOSE);
+	SQLFreeStmt(mCurrentSqlHstmt, SQL_UNBIND);
+	SQLFreeStmt(mCurrentSqlHstmt, SQL_RESET_PARAMS);
+	SQLFreeStmt(mCurrentSqlHstmt, SQL_CLOSE);
 
 	mSqlConnPool[LWorkerThreadId].mUsingNow = false;
 }
@@ -65,7 +65,7 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 		
 		//todo: SQLDriverConnect를 이용하여 SQL서버에 연결하고 그 핸들을 SQL_CONN의 mSqlHdbc에 할당
 		SQLRETURN ret = SQLDriverConnect(mSqlConnPool[i].mSqlHdbc, NULL,
-			const_cast<wchar_t*>(connInfoStr), SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT);
+			const_cast<wchar_t*>(connInfoStr), SQL_NTS, NULL, 0, &resultLen, SQL_DRIVER_NOPROMPT);
 
 		if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 		{
@@ -82,7 +82,7 @@ bool DbHelper::Initialize(const wchar_t* connInfoStr, int workerThreadCount)
 		}
 
 		//todo: SQLAllocHandle를 이용하여 SQL_CONN의 mSqlHstmt 핸들 사용가능하도록 처리
-		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool->mSqlHdbc, &(mSqlConnPool[i].mSqlHstmt)))
+		if (SQL_SUCCESS != SQLAllocHandle(SQL_HANDLE_STMT, mSqlConnPool[i].mSqlHdbc, &(mSqlConnPool[i].mSqlHstmt)))
 		{
 			printf_s("DbHelper Initialize SQLAllocHandle SQL_HANDLE_STMT failed\n");
 			return false;
@@ -147,7 +147,7 @@ bool DbHelper::BindParamInt(int* param)
 {
 	//todo: int형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_LONG, SQL_IS_INTEGER, 10, 0, param, 0, NULL);
+		SQL_C_LONG, SQL_IS_INTEGER, 4, 0, param, 0, NULL);
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{

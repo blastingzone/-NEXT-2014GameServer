@@ -138,8 +138,7 @@ void ClientSession::AcceptCompletion()
 		printf_s("[DEBUG] PreRecv error: %d\n", GetLastError());
 	}
 
-	//DBtest
-	DbTestFunc();
+
 }
 
 

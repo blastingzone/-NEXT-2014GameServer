@@ -11,9 +11,9 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 --todo: if exists를 사용하여 PlayerTable 테이블이 존재한다면 해당 테이블 드랍
-
-IF EXISTS( SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "PlayerTable")
-	DROP PROCEDURE [dbo].[PlayerTable]
+IF OBJECT_ID('PlayerTable','U') IS NOT NULL
+	DROP TABLE [dbo].[PlayerTable]
+GO
 
 CREATE TABLE [dbo].[PlayerTable](
 	[playerUID] [int] NOT NULL PRIMARY KEY IDENTITY(100, 1),
@@ -37,19 +37,9 @@ CREATE PROCEDURE [dbo].[spCreatePlayer]
 AS
 BEGIN
     --todo: 해당 이름의 플레이어를 생성하고 플레이어의 identity를 리턴, [createTime]는 현재 생성 날짜로 설정
-	INSERT INTO PlayerTable
-	(
-		playerName,
-		createTime,
-		isValid
-	)
-	VALUES
-	(
-		@name,
-		GETDATE(),
-		1
-	);
-	SELECT IDENT_CURRENT(PlayerTable);
+	SET NOCOUNT ON
+	INSERT INTO PlayerTable(playerName, createTime, isValid, comment) VALUES(@name,GETDATE(), 0, 'none')
+	SELECT playerUID FROM PlayerTable WHERE playerName = @name
 END
 GO
 
@@ -62,7 +52,9 @@ CREATE PROCEDURE [dbo].[spDeletePlayer]
 AS
 BEGIN
 	--todo: 해당 플레이어 삭제
-	DELETE FROM PlayerTable WHERE playerUID = @playerUDI;
+	SET NOCOUNT ON
+	DELETE FROM PlayerTable WHERE playerUID = @playerUID
+	SELECT @@ROWCOUNT
 END
 GO
 
@@ -78,9 +70,10 @@ CREATE PROCEDURE [dbo].[spUpdatePlayerPosition]
 AS
 BEGIN
     -- todo: 해당 플레이어의 정보(x,y,z) 업데이트 
-	UPDATE playerTable
-	SET currentPosX = @posX, currentPosY = @posY, currentPosZ = @posZ
-	WHERE playerUID = @PlayerUID;
+
+	SET NOCOUNT ON
+	UPDATE PlayerTable SET currentPosX = @posX, currentPosY = @posY, currentPosZ = @posZ WHERE playerUID=@playerUID
+	SELECT @@ROWCOUNT
 END
 GO
 
@@ -124,7 +117,8 @@ CREATE PROCEDURE [dbo].[spLoadPlayer]
 AS
 BEGIN
     --todo: 플레이어 정보  [playerName], [currentPosX], [currentPosY], [currentPosZ], [isValid], [comment]  얻어오기
-	SELECT * FROM playerTable WHERE playerUID = @playerUID;
+	SET NOCOUNT ON
+	SELECT [playerName], [currentPosX], [currentPosY], [currentPosZ], [isValid], [comment] FROM PlayerTable WHERE playerUID = @playerUID
 END		   
 GO		   
 
@@ -133,19 +127,19 @@ GO
 
 --저장 프로시저 테스트
 
---EXEC spCreatePlayer '테스트플레이어'
---GO
+EXEC spCreatePlayer '테스트플레이어'
+GO
 
---EXEC spUpdatePlayerComment 100, "가나다라 플레이어 코멘트 테스트 kekeke"
---GO
+EXEC spUpdatePlayerComment 100, "가나다라 플레이어 코멘트 테스트 kekeke"
+GO
 
---EXEC spUpdatePlayerValid 100, 1
---GO
+EXEC spUpdatePlayerValid 100, 1
+GO
 
---EXEC spLoadPlayer 100
---GO
+EXEC spLoadPlayer 100
+GO
 
---EXEC spDeletePlayer 100
---GO
+EXEC spDeletePlayer 100
+GO
 
 	

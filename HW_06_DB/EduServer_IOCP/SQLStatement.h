@@ -4,7 +4,7 @@
 
 const wchar_t* SQL_LoadPlayer = L"{ call dbo.spLoadPlayer (?) }"; ///< uid
 
-const wchar_t* SQL_CreatePlayer = L"{ call dbo.spCreatePlayer (?, , ) }";//  spCreatePlayer
+const wchar_t* SQL_CreatePlayer = L"{ call dbo.spCreatePlayer (?) }";//  spCreatePlayer
 
 const wchar_t* SQL_DeletePlayer = L"{ call dbo.spDeletePlayer (?) }";// spDeletePlayer
 

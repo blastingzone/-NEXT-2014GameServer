@@ -6,6 +6,7 @@
 #include "ClientSession.h"
 #include "ServerSession.h"
 #include "IocpManager.h"
+#include "SQLTest.h"
 
 
 WorkerThread::WorkerThread(int workerThreadId, HANDLE hThread, HANDLE hCompletionPort)
@@ -104,6 +105,9 @@ void WorkerThread::DoIocpJob()
 	
 		/// for test
 		remote->EchoBack();
+
+		//DBtest
+		DbTestFunc();
 		
 		completionOk = remote->PreRecv();
 
