@@ -55,12 +55,13 @@ void Player::OnTick()
 	//timer에서 owner의 lock을 사용 task실행후 어 leavelock하니 이전에 걸었던 락하고 다르네?
 	//1.task실행과정 중에 뭔가가 일어났다.
 	//2.다른 쓰레드에서 해당 owner의 lock을 건드렸다.
-	//FastSpinLock에 LockOrderCheck에서 문제가 있는 것 같다.
+	//
 	if (true)
 	{
 		int buffId = mPlayerId * 100;
 		int duration = (rand() % 3 + 2) * 1000;
-	
+		//int duration = 0;
+
 		//GCE 예. (lock-order 귀찮고, 전역적으로 순서 보장 필요할 때)
 		auto playerEvent = std::make_shared<AllPlayerBuffEvent>(buffId, duration);
 		GCEDispatch(playerEvent, &AllPlayerBuffEvent::DoBuffToAllPlayers, mPlayerId);
@@ -80,7 +81,6 @@ void Player::OnTick()
 	
 	if (mHeartBeat > 0)
 		DoSyncAfter(mHeartBeat, GetSharedFromThis<Player>(), &Player::OnTick);
-		
 }
 
 void Player::AddBuff(int fromPlayerId, int buffId, int duration)
