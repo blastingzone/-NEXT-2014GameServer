@@ -12,6 +12,8 @@ GO
 
 --todo: if exists를 사용하여 PlayerTable 테이블이 존재한다면 해당 테이블 드랍
 
+IF EXISTS( SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "PlayerTable")
+	DROP PROCEDURE [dbo].[PlayerTable]
 
 CREATE TABLE [dbo].[PlayerTable](
 	[playerUID] [int] NOT NULL PRIMARY KEY IDENTITY(100, 1),
@@ -35,7 +37,19 @@ CREATE PROCEDURE [dbo].[spCreatePlayer]
 AS
 BEGIN
     --todo: 해당 이름의 플레이어를 생성하고 플레이어의 identity를 리턴, [createTime]는 현재 생성 날짜로 설정
-	
+	INSERT INTO PlayerTable
+	(
+		playerName,
+		createTime,
+		isValid
+	)
+	VALUES
+	(
+		@name,
+		GETDATE(),
+		1
+	);
+	SELECT IDENT_CURRENT(PlayerTable);
 END
 GO
 
@@ -48,7 +62,7 @@ CREATE PROCEDURE [dbo].[spDeletePlayer]
 AS
 BEGIN
 	--todo: 해당 플레이어 삭제
-
+	DELETE FROM PlayerTable WHERE playerUID = @playerUDI;
 END
 GO
 
@@ -64,7 +78,9 @@ CREATE PROCEDURE [dbo].[spUpdatePlayerPosition]
 AS
 BEGIN
     -- todo: 해당 플레이어의 정보(x,y,z) 업데이트 
-	
+	UPDATE playerTable
+	SET currentPosX = @posX, currentPosY = @posY, currentPosZ = @posZ
+	WHERE playerUID = @PlayerUID;
 END
 GO
 
@@ -108,7 +124,7 @@ CREATE PROCEDURE [dbo].[spLoadPlayer]
 AS
 BEGIN
     --todo: 플레이어 정보  [playerName], [currentPosX], [currentPosY], [currentPosZ], [isValid], [comment]  얻어오기
-	
+	SELECT * FROM playerTable WHERE playerUID = @playerUID;
 END		   
 GO		   
 
