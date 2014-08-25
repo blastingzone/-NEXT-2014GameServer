@@ -41,20 +41,23 @@ void Timer::DoTimerJob()
 		//std::priority_queue 내부적으로 힙으로 만들어짐
 		//이거인가?
 		//_Container가 vector로 만들어짐
+		//그리고 통채로 heap에다 쑤셔넣음
 
 		// FastSpinlockGuard exclusive(mLock);
 		// 락을 걸순 없을 듯(락내부에서 다시 호출하잖소)
 
 		//레퍼런스를 넘겨받은 이후
 		//sort가 일어나면서 문제가 발생하는 것 같다.
+		//vector의 경우 레퍼런스를 받게 되면 
+		//해당하는 영역이 sort할때나 메모리 확장이 필요할 때 위험하다.
 		//일단 레퍼런스가 아닌 복사를 일으키면 뻑이 사라진다.
+		//레퍼런스를 받고싶다면 노드를 이용한 자료구조를 사용하면 될 듯하다.
 		const TimerJobElement& timerJobElem = mTimerJobQueue.top(); 
 		
-		/*일단 아래처럼 해놓으니 뻑은 안난다.
+		/*vector로 했을 경우 일단 아래처럼 해놓으니 뻑은 안난다. 
 		const TimerJobElement timerJobElem = mTimerJobQueue.top();
 		mTimerJobQueue.pop();*/
-		//하지만 완벽하지 않은 것 같다.
-		//top과 pop이 동시에 이루어지는 자료구조가 필요할 듯 하다.
+		//자꾸 이부분이 tls라는 걸 까먹는다.
 
 		if (LTickCount < timerJobElem.mExecutionTick)
 			break;
