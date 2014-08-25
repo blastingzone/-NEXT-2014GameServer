@@ -147,7 +147,8 @@ bool DbHelper::BindParamInt(int* param)
 {
 	//todo: int형 파라미터 바인딩
 	SQLRETURN ret = SQLBindParameter(mCurrentSqlHstmt, mCurrentBindParam++, SQL_PARAM_INPUT,
-		SQL_C_LONG, SQL_IS_INTEGER, 4, 0, param, 0, NULL);
+		SQL_C_LONG, SQL_IS_INTEGER, 4, 0, param, 0, NULL); ///# 왜 4?? 
+	//http://msdn.microsoft.com/en-us/library/ms711786(v=vs.85).aspx
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -218,7 +219,7 @@ void DbHelper::BindResultColumnFloat(float* r)
 {
 	SQLLEN len = 0;
 	//todo: float형 결과 컬럼 바인딩
-	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_C_FLOAT, r, 15, &len);
+	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_C_FLOAT, r, 15, &len); ///# 15가 맞다고 생각하는가?
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
@@ -240,7 +241,7 @@ void DbHelper::BindResultColumnText(wchar_t* text, size_t count)
 {
 	SQLLEN len = 0;
 	//todo: wchar_t*형 결과 컬럼 바인딩
-	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_WCHAR, text, count, &len);
+	SQLRETURN ret = SQLBindCol(mCurrentSqlHstmt, mCurrentResultCol++, SQL_WCHAR, text, count, &len); ///# count*2
 
 	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
 	{
