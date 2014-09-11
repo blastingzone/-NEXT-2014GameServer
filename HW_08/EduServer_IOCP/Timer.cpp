@@ -19,8 +19,6 @@ void Timer::PushTimerJob(SyncExecutablePtr owner, const TimerTask& task, uint32_
 	//FastSpinlockGuard exclusive(mLock);
 
 	//TODO: mTimerJobQueue에 TimerJobElement를 push..
-	//int64_t dueTimeTick = after + GetTickCount64();
-	//이거 순서 섞기
 	int64_t dueTimeTick = after + LTickCount;
 	mTimerJobQueue.push(TimerJobElement(owner, task, dueTimeTick));
 }

@@ -12,6 +12,15 @@
     <Filter Include="Threading">
       <UniqueIdentifier>{4f5e5079-d59c-4fe2-904d-cb9eff4ddf02}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DataBaseHandling">
+      <UniqueIdentifier>{cee9d119-6c87-4e0a-834d-cca0a4400152}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Contents">
+      <UniqueIdentifier>{6f91469d-d22e-4cc0-8638-ab71745975ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SessionHandling">
+      <UniqueIdentifier>{040daadd-e696-45bf-955b-9a78bfb5c6ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -27,15 +36,6 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="EduServer_IOCP.h">
-      <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="ClientSession.h">
-      <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="SessionManager.h">
-      <Filter>Main</Filter>
-    </ClInclude>
-    <ClInclude Include="IocpManager.h">
       <Filter>Main</Filter>
     </ClInclude>
     <ClInclude Include="ObjectPool.h">
@@ -68,17 +68,38 @@
     <ClInclude Include="FastSpinlock.h">
       <Filter>Threading</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Main</Filter>
-    </ClInclude>
     <ClInclude Include="TypeTraits.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="SessionManager.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientSession.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="IocpManager.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Contents</Filter>
+    </ClInclude>
     <ClInclude Include="PlayerManager.h">
-      <Filter>Main</Filter>
+      <Filter>Contents</Filter>
     </ClInclude>
     <ClInclude Include="PlayerWideEvent.h">
-      <Filter>Main</Filter>
+      <Filter>Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="DBManager.h">
+      <Filter>DataBaseHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="DBThread.h">
+      <Filter>DataBaseHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="DBContext.h">
+      <Filter>DataBaseHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="DBHelper.h">
+      <Filter>DataBaseHandling</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -90,15 +111,6 @@
     </ClCompile>
     <ClCompile Include="Exception.cpp">
       <Filter>Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="ClientSession.cpp">
-      <Filter>Main</Filter>
-    </ClCompile>
-    <ClCompile Include="SessionManager.cpp">
-      <Filter>Main</Filter>
-    </ClCompile>
-    <ClCompile Include="IocpManager.cpp">
-      <Filter>Main</Filter>
     </ClCompile>
     <ClCompile Include="CircularBuffer.cpp">
       <Filter>Utils</Filter>
@@ -121,14 +133,35 @@
     <ClCompile Include="FastSpinlock.cpp">
       <Filter>Threading</Filter>
     </ClCompile>
+    <ClCompile Include="SessionManager.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientSession.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="IocpManager.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
     <ClCompile Include="Player.cpp">
-      <Filter>Main</Filter>
+      <Filter>Contents</Filter>
     </ClCompile>
     <ClCompile Include="PlayerManager.cpp">
-      <Filter>Main</Filter>
+      <Filter>Contents</Filter>
     </ClCompile>
     <ClCompile Include="PlayerWideEvent.cpp">
-      <Filter>Main</Filter>
+      <Filter>Contents</Filter>
+    </ClCompile>
+    <ClCompile Include="DBManager.cpp">
+      <Filter>DataBaseHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="DBThread.cpp">
+      <Filter>DataBaseHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="DBContext.cpp">
+      <Filter>DataBaseHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="DBHelper.cpp">
+      <Filter>DataBaseHandling</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

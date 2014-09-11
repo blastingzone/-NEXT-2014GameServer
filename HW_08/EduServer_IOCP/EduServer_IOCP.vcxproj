@@ -148,6 +148,10 @@
   <ItemGroup>
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="DBContext.h" />
+    <ClInclude Include="DBHelper.h" />
+    <ClInclude Include="DBManager.h" />
+    <ClInclude Include="DBThread.h" />
     <ClInclude Include="EduServer_IOCP.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="FastSpinlock.h" />
@@ -171,6 +175,10 @@
   <ItemGroup>
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="DBContext.cpp" />
+    <ClCompile Include="DBHelper.cpp" />
+    <ClCompile Include="DBManager.cpp" />
+    <ClCompile Include="DBThread.cpp" />
     <ClCompile Include="EduServer_IOCP.cpp" />
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
