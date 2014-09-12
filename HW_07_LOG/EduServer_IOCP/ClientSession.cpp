@@ -61,7 +61,7 @@ bool ClientSession::PostAccept()
 	acceptContext->mWsaBuf.buf = nullptr;
 
 	if (FALSE == AcceptEx(*GIocpManager->GetListenSocket(), mSocket, GIocpManager->mAcceptBuf, 0,
-		sizeof(SOCKADDR_IN)+16, sizeof(SOCKADDR_IN)+16, &bytes, (LPOVERLAPPED)acceptContext))
+		sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &bytes, (LPOVERLAPPED)acceptContext))
 	{
 		if (WSAGetLastError() != WSA_IO_PENDING)
 		{
@@ -78,14 +78,10 @@ bool ClientSession::PostAccept()
 void ClientSession::AcceptCompletion()
 {
 	TRACE_THIS;
-<<<<<<< .mine
-	EVENT_LOG( "Accept Completion", 1 );
-=======
 	TRACE_PERF;
->>>>>>> .r17
 
 	CRASH_ASSERT(LThreadType == THREAD_IO_WORKER);
-	
+
 	if (1 == InterlockedExchange(&mConnected, 1))
 	{
 		/// already exists?
@@ -93,10 +89,8 @@ void ClientSession::AcceptCompletion()
 		return;
 	}
 
-	CRASH_ASSERT( false );
-
 	bool resultOk = true;
-	do 
+	do
 	{
 		if (SOCKET_ERROR == setsockopt(mSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, (char*)GIocpManager->GetListenSocket(), sizeof(SOCKET)))
 		{
@@ -158,7 +152,7 @@ void ClientSession::AcceptCompletion()
 
 	//todo: 플레이어 id는 여러분의 플레이어 테이블 상황에 맞게 적절히 고쳐서 로딩하도록 
 	static int id = 101;
- 	mPlayer.RequestLoad(id++);
+	mPlayer.RequestLoad(id++);
 }
 
 
@@ -180,4 +174,5 @@ void ClientSession::OnRelease()
 
 	GClientSessionManager->ReturnClientSession(this);
 }
+
 

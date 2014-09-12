@@ -10,13 +10,13 @@ void ThreadCallHistory::DumpOut(std::ostream& ost)
 
 	ost << "===== Recent Call history [Thread:" << mThreadId << "]" << std::endl;
 
-	for ( int i = 1; i <= count; ++i )
+	for (int i = 1; i <= count; ++i)
 	{
-		ost << " HISTORY:" << mHistory[( mCounter - i ) % MAX_HISTORY] << std::endl;
+		ost << " HISTORY:" << mHistory[(mCounter - i) % MAX_HISTORY] << std::endl;
 	}
 	ost << "===== End of Recent Call History" << std::endl << std::endl;
 }
-	
+
 
 void ThreadCallElapsedRecord::DumpOut(std::ostream& ost)
 {
@@ -26,7 +26,7 @@ void ThreadCallElapsedRecord::DumpOut(std::ostream& ost)
 
 	for (int i = 1; i <= count; ++i)
 	{
-		ost << "  FUNC:" << mElapsedFuncSig[(mCounter - i) % MAX_ELAPSED_RECORD] 
+		ost << "  FUNC:" << mElapsedFuncSig[(mCounter - i) % MAX_ELAPSED_RECORD]
 			<< "ELAPSED: " << mElapsedTime[(mCounter - i) % MAX_ELAPSED_RECORD] << std::endl;
 	}
 	ost << "===== End of Recent Call Performance" << std::endl << std::endl;
@@ -43,17 +43,17 @@ namespace LoggerUtil
 	{
 		//todo: gLogEvents내용 ost 스트림에 쓰기
 		uint64_t count = gCurrentLogIndex < MAX_LOG_SIZE ? gCurrentLogIndex : MAX_LOG_SIZE;
-<<<<<<< .mine
-		ost << "count : " << count << "gCurrentLogIndex" << gCurrentLogIndex << std::endl;
-		for ( int i = 1; i <= count; ++i )
-=======
 
-		for ( int i = 1; i <= count; ++i )
->>>>>>> .r17
+		for (int i = 1; i <= count; ++i)
 		{
-			ost << " THREAD ID:" << (int)(gLogEvents[count - i].mThreadId)
+			ost << " THREAD ID:" << gLogEvents[count - i].mThreadId
 				<< " EVENT MSG:" << gLogEvents[count - i].mMessage
-				<< " ADDTIONAL INFO:" << (int)(gLogEvents[count - i].mAdditionalInfo) << std::endl;
+				<< " ADDTIONAL INFO:" << gLogEvents[count - i].mAdditionalInfo << std::endl;
+
+			///# 깔끔하게 이렇게
+			//const LogEvent& log = gLogEvents[(gCurrentLogIndex - i) % MAX_LOG_SIZE];
+			//ost << "TID[" << log.mThreadId << "] MSG[ " << log.mMessage << " ] INFO [" << log.mAdditionalInfo << "]" << std::endl;
+
 		}
 		ost << "===== End of Recent Global Event" << std::endl << std::endl;
 	}
