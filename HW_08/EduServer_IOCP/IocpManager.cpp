@@ -7,8 +7,9 @@
 #include "EduServer_IOCP.h"
 #include "ClientSession.h"
 #include "SessionManager.h"
+#include "DBContext.h"
 
-#define GQCS_TIMEOUT	INFINITE //20
+//#define GQCS_TIMEOUT	INFINITE //20
 
 IocpManager* GIocpManager = nullptr;
 
@@ -256,6 +257,15 @@ bool IocpManager::SendCompletion(ClientSession* client, OverlappedSendContext* c
 	
 	/// zero receive
 	return client->PreRecv();
+}
+
+void IocpManager::PostDatabaseResult(DatabaseJobContext* dbContext)
+{
+	if (FALSE == PostQueuedCompletionStatus(mCompletionPort, 0, (ULONG_PTR)CK_DB_RESULT, (LPOVERLAPPED)dbContext))
+	{
+		printf_s("IocpManager::PostDatabaseResult PostQueuedCompletionStatus Error: %d\n", GetLastError());
+		CRASH_ASSERT(false);
+	}
 }
 
 

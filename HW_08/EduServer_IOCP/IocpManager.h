@@ -8,6 +8,8 @@ struct OverlappedRecvContext;
 struct OverlappedDisconnectContext;
 struct OverlappedAcceptContext;
 
+struct DatabaseJobContext;
+
 class IocpManager
 {
 public:
@@ -20,6 +22,7 @@ public:
 	bool StartIoThreads();
 	void StartAccept();
 
+	void PostDatabaseResult(DatabaseJobContext* dbContext);
 
 	HANDLE GetComletionPort()	{ return mCompletionPort; }
 	int	GetIoThreadCount()		{ return mIoThreadCount;  }

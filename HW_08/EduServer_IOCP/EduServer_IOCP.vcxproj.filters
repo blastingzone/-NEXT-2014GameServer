@@ -65,9 +65,6 @@
     <ClInclude Include="GrandCentralExecuter.h">
       <Filter>Threading</Filter>
     </ClInclude>
-    <ClInclude Include="FastSpinlock.h">
-      <Filter>Threading</Filter>
-    </ClInclude>
     <ClInclude Include="TypeTraits.h">
       <Filter>Utils</Filter>
     </ClInclude>
@@ -101,6 +98,12 @@
     <ClInclude Include="DBHelper.h">
       <Filter>DataBaseHandling</Filter>
     </ClInclude>
+    <ClInclude Include="FastSpinlock.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -128,9 +131,6 @@
       <Filter>Threading</Filter>
     </ClCompile>
     <ClCompile Include="GrandCentralExecuter.cpp">
-      <Filter>Threading</Filter>
-    </ClCompile>
-    <ClCompile Include="FastSpinlock.cpp">
       <Filter>Threading</Filter>
     </ClCompile>
     <ClCompile Include="SessionManager.cpp">
@@ -162,6 +162,12 @@
     </ClCompile>
     <ClCompile Include="DBHelper.cpp">
       <Filter>DataBaseHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="FastSpinlock.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
