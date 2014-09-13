@@ -1,4 +1,4 @@
-#include "stdafx.h"
+Ôªø#include "stdafx.h"
 #include "ThreadLocal.h"
 #include "Exception.h"
 #include "SyncExecutable.h"
@@ -18,7 +18,7 @@ void Timer::PushTimerJob(SyncExecutablePtr owner, const TimerTask& task, uint32_
 
 	//FastSpinlockGuard exclusive(mLock);
 
-	//TODO: mTimerJobQueueø° TimerJobElement∏¶ push..
+	//TODO: mTimerJobQueueÏóê TimerJobElementÎ•º push..
 	int64_t dueTimeTick = after + LTickCount;
 	mTimerJobQueue.push(TimerJobElement(owner, task, dueTimeTick));
 }

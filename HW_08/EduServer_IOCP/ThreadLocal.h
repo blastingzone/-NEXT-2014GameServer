@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define MAX_IO_THREAD	4
 #define MAX_DB_THREAD	4
@@ -23,7 +23,7 @@ class LockOrderChecker;
 
 extern __declspec(thread) int LThreadType;
 
-//¾Æ·¡ µÎ°³ ¼öÁ¤ ¿¹Á¤
+//ì•„ë˜ ë‘ê°œ ìˆ˜ì • ì˜ˆì •
 extern __declspec(thread) int LWorkerThreadId;
 extern __declspec(thread) int LIoThreadId;
 

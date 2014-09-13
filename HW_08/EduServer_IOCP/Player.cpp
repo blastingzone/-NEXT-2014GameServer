@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "Timer.h"
 #include "ThreadLocal.h"
 #include "ClientSession.h"
@@ -19,7 +19,7 @@ Player::~Player()
 
 void Player::PlayerReset()
 {
-	/// ÇÃ·¹ÀÌ¾î ¸Ê¿¡¼­ Á¦°Å
+	/// í”Œë ˆì´ì–´ ë§µì—ì„œ ì œê±°
 	GPlayerManager->UnregisterPlayer(mPlayerId);
 
 	mPlayerId = -1;
@@ -32,10 +32,10 @@ void Player::Start(int heartbeat)
 	mIsAlive = true;
 	mHeartBeat = heartbeat;
 	
-	/// ID ¹ß±Ş ¹× ÇÃ·¹À×¾î ¸Ê¿¡ µî·Ï
+	/// ID ë°œê¸‰ ë° í”Œë ˆì‰ì–´ ë§µì— ë“±ë¡
 	mPlayerId = GPlayerManager->RegisterPlayer(GetSharedFromThis<Player>());
 
-	/// »ı¸í ºÒ¾î³Ö±â ¤¡¤¡
+	/// ìƒëª… ë¶ˆì–´ë„£ê¸° ã„±ã„±
 	OnTick();
 
 }
@@ -46,15 +46,15 @@ void Player::OnTick()
 		return;
 
 	
-	/// ·£´ıÀ¸·Î ÀÌº¥Æ®¸¦ ¹ß»ı½ÃÄÑº¸±â (¿¹: ´Ù¸¥ ¸ğµç ÇÃ·¹ÀÌ¾î¿¡°Ô ¹öÇÁ ÁÖ±â)
-	//ÀÌ°É ´Ã¸®¸é ¹ö±×¸¦ Ã£À» ¼ö ÀÖÀ» µíÇÏ±º
-	//if (rand() % 100 == 0) ///< 1% È®·ü
-	//°¡²û LockOrder¿¡¼­ »¶ÀÌ³² Ã³À½¿¡ ¸î¹ø³ª°í ¾È³ª¼­ Â¥Áõ³²
-	//tick¿¡ ÀÖ´Â lock¿¡¼­ »¶ÀÌ³²
-	//´ıÇÁÆÄÀÏ ³²±â±â ¼º°ø LockOrderÀÇ pop¼ø¼­¿¡¼­ »¶ÀÌ³²
-	//timer¿¡¼­ ownerÀÇ lockÀ» »ç¿ë task½ÇÇàÈÄ ¾î leavelockÇÏ´Ï ÀÌÀü¿¡ °É¾ú´ø ¶ôÇÏ°í ´Ù¸£³×?
-	//1.task½ÇÇà°úÁ¤ Áß¿¡ ¹º°¡°¡ ÀÏ¾î³µ´Ù.
-	//2.´Ù¸¥ ¾²·¹µå¿¡¼­ ÇØ´ç ownerÀÇ lockÀ» °Çµå·È´Ù.
+	/// ëœë¤ìœ¼ë¡œ ì´ë²¤íŠ¸ë¥¼ ë°œìƒì‹œì¼œë³´ê¸° (ì˜ˆ: ë‹¤ë¥¸ ëª¨ë“  í”Œë ˆì´ì–´ì—ê²Œ ë²„í”„ ì£¼ê¸°)
+	//ì´ê±¸ ëŠ˜ë¦¬ë©´ ë²„ê·¸ë¥¼ ì°¾ì„ ìˆ˜ ìˆì„ ë“¯í•˜êµ°
+	//if (rand() % 100 == 0) ///< 1% í™•ë¥ 
+	//ê°€ë” LockOrderì—ì„œ ë»‘ì´ë‚¨ ì²˜ìŒì— ëª‡ë²ˆë‚˜ê³  ì•ˆë‚˜ì„œ ì§œì¦ë‚¨
+	//tickì— ìˆëŠ” lockì—ì„œ ë»‘ì´ë‚¨
+	//ë¤í”„íŒŒì¼ ë‚¨ê¸°ê¸° ì„±ê³µ LockOrderì˜ popìˆœì„œì—ì„œ ë»‘ì´ë‚¨
+	//timerì—ì„œ ownerì˜ lockì„ ì‚¬ìš© taskì‹¤í–‰í›„ ì–´ leavelockí•˜ë‹ˆ ì´ì „ì— ê±¸ì—ˆë˜ ë½í•˜ê³  ë‹¤ë¥´ë„¤?
+	//1.taskì‹¤í–‰ê³¼ì • ì¤‘ì— ë­”ê°€ê°€ ì¼ì–´ë‚¬ë‹¤.
+	//2.ë‹¤ë¥¸ ì“°ë ˆë“œì—ì„œ í•´ë‹¹ ownerì˜ lockì„ ê±´ë“œë ¸ë‹¤.
 	//
 	if (true)
 	{
@@ -62,19 +62,19 @@ void Player::OnTick()
 		int duration = (rand() % 3 + 2) * 1000;
 		//int duration = 0;
 
-		//GCE ¿¹. (lock-order ±ÍÂú°í, Àü¿ªÀûÀ¸·Î ¼ø¼­ º¸Àå ÇÊ¿äÇÒ ¶§)
+		//GCE ì˜ˆ. (lock-order ê·€ì°®ê³ , ì „ì—­ì ìœ¼ë¡œ ìˆœì„œ ë³´ì¥ í•„ìš”í•  ë•Œ)
 		auto playerEvent = std::make_shared<AllPlayerBuffEvent>(buffId, duration);
 		GCEDispatch(playerEvent, &AllPlayerBuffEvent::DoBuffToAllPlayers, mPlayerId);
 	}
 
 
-	//TODO: AllPlayerBuffDecay::CheckBuffTimeout¸¦ GrandCentralExecuter¸¦ ÅëÇØ ½ÇÇà
-	//make_sharedÀÌ°Å ¸Ş¸ğ¸® ÇÒ´ç ¾Æ´Ñ°¡? ±×·³ Ç®¿¡¼­ ¹Ş¾Æ¿Í¾ßÇÏ´Â °Í ¾Æ´Ñ°¡?
-	//¶â¾îº¸´Ï stl¿¡¼­ ¸¸µé¾îÁø °´Ã¼(_Ref_count_obj)¿¡ ÇÒ´çÇÏ°í ÀÖ´Â °Í °°´Ù.
-	//allocate_shared¸¦ ÀÌ¿ëÇÏ¸é °¡´ÉÇÏ´Ù°í ÇÑ´Ù.(make_shared¿Í °°Àº ±â´ÉÀ» ÇÏ´Â °Í °°´Ù)
-	//make_shared ÇÏ³ªÀÇ ¸Ş¸ğ¸® ºí·°¾È¿¡ Æ÷ÀÎÅÍ¿Í °´Ã¼¸¦ ´ã´Â´Ù.
+	//TODO: AllPlayerBuffDecay::CheckBuffTimeoutë¥¼ GrandCentralExecuterë¥¼ í†µí•´ ì‹¤í–‰
+	//make_sharedì´ê±° ë©”ëª¨ë¦¬ í• ë‹¹ ì•„ë‹Œê°€? ê·¸ëŸ¼ í’€ì—ì„œ ë°›ì•„ì™€ì•¼í•˜ëŠ” ê²ƒ ì•„ë‹Œê°€?
+	//ëœ¯ì–´ë³´ë‹ˆ stlì—ì„œ ë§Œë“¤ì–´ì§„ ê°ì²´(_Ref_count_obj)ì— í• ë‹¹í•˜ê³  ìˆëŠ” ê²ƒ ê°™ë‹¤.
+	//allocate_sharedë¥¼ ì´ìš©í•˜ë©´ ê°€ëŠ¥í•˜ë‹¤ê³  í•œë‹¤.(make_sharedì™€ ê°™ì€ ê¸°ëŠ¥ì„ í•˜ëŠ” ê²ƒ ê°™ë‹¤)
+	//make_shared í•˜ë‚˜ì˜ ë©”ëª¨ë¦¬ ë¸”ëŸ­ì•ˆì— í¬ì¸í„°ì™€ ê°ì²´ë¥¼ ë‹´ëŠ”ë‹¤.
 
-	///# ±×·¡ Á¤¼®´ë·Î¶ó¸é Ç®¿¡¼­ ¹Ş´Â°Ô ¸ÂÁö..
+	///# ê·¸ë˜ ì •ì„ëŒ€ë¡œë¼ë©´ í’€ì—ì„œ ë°›ëŠ”ê²Œ ë§ì§€..
 
 	auto playerDecay = std::make_shared<AllPlayerBuffDecay>();
 	GCEDispatch(playerDecay, &AllPlayerBuffDecay::CheckBuffTimeout);
@@ -87,13 +87,13 @@ void Player::AddBuff(int fromPlayerId, int buffId, int duration)
 {
 	printf_s("I am Buffed [%d]! from Player [%d]\n", buffId, fromPlayerId);
 
-	/// ÇÃ·¹ÀÌ¾îÀÇ ¹öÇÁ ¸®½ºÆ®¿¡ Ãß°¡
+	/// í”Œë ˆì´ì–´ì˜ ë²„í”„ ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
 	mBuffList.insert(std::make_pair(buffId, duration));
 }
 
 void Player::DecayTickBuff()
 {
-	/// ¹öÇÁÀÇ ³²Àº ½Ã°£À» ÁÖ±âÀûÀ¸·Î ¼öÁ¤ÇÏ°í, ½Ã°£ÀÌ Á¾·áµÇ¸é Á¦°ÅÇÏ±â
+	/// ë²„í”„ì˜ ë‚¨ì€ ì‹œê°„ì„ ì£¼ê¸°ì ìœ¼ë¡œ ìˆ˜ì •í•˜ê³ , ì‹œê°„ì´ ì¢…ë£Œë˜ë©´ ì œê±°í•˜ê¸°
 	for (auto it = mBuffList.begin(); it != mBuffList.end();)
 	{
 		it->second -= mHeartBeat;

@@ -1,12 +1,12 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "ThreadLocal.h"
 #include "Timer.h"
 #include "LockOrderChecker.h"
 
-//tls¼±¾ğºÎ
+//tlsì„ ì–¸ë¶€
 __declspec(thread) int LThreadType = -1;
 
-//¾Æ·¡ µÎ°³ ¼öÁ¤ ¿¹Á¤
+//ì•„ë˜ ë‘ê°œ ìˆ˜ì • ì˜ˆì •
 __declspec(thread) int LIoThreadId = -1;
 __declspec(thread) int LWorkerThreadId = -1;
 

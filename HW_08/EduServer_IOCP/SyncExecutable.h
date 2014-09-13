@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "TypeTraits.h"
 #include "FastSpinlock.h"
@@ -15,16 +15,16 @@ public:
 	template <class R, class T, class... Args>
 	R DoSync(R (T::*memfunc)(Args...), Args... args)
 	{
-		//»ó¼ÓÈ®ÀÎ
+		//ìƒì†í™•ì¸
 		static_assert(true == std::is_convertible<T, SyncExecutable>::value, "T should be derived from SyncExecutable");
 
-		//TODO: mLockÀ¸·Î º¸È£ÇÑ »óÅÂ¿¡¼­, memfunc¸¦ ½ÇÇàÇÏ°í °á°ú°ª RÀ» ¸®ÅÏ
+		//TODO: mLockìœ¼ë¡œ ë³´í˜¸í•œ ìƒíƒœì—ì„œ, memfuncë¥¼ ì‹¤í–‰í•˜ê³  ê²°ê³¼ê°’ Rì„ ë¦¬í„´
 		FastSpinlockGuard exclusive(mLock);
 
 		//auto func = std::bind(memfunc, static_cast<T*>(this), std::forward<Args>(args)...);
 		//return func();
 
-		///# ¿©±â¿¡¼­ ¹Ù·Î ½ÇÇàÇÒ°Å±â ¶§¹®¿¡ ±»ÀÌ ¹ÙÀÎµå ¾È½áµµ µÈ´Ù.
+		///# ì—¬ê¸°ì—ì„œ ë°”ë¡œ ì‹¤í–‰í• ê±°ê¸° ë•Œë¬¸ì— êµ³ì´ ë°”ì¸ë“œ ì•ˆì¨ë„ ëœë‹¤.
 		return (static_cast<T*>(this)->*memfunc)(args...);
 	}
 	
@@ -37,10 +37,10 @@ public:
  	{
 		static_assert(true == std::is_convertible<T, SyncExecutable>::value, "T should be derived from SyncExecutable");
  		
-		//TODO: this Æ÷ÀÎÅÍ¸¦ std::shared_ptr<T>ÇüÅÂ·Î ¹İÈ¯.
-		//(HINT: ÀÌ Å¬·¡½º´Â std::enable_shared_from_this¿¡¼­ »ó¼Ó¹Ş¾Ò´Ù. ±×¸®°í static_pointer_cast »ç¿ë)
+		//TODO: this í¬ì¸í„°ë¥¼ std::shared_ptr<T>í˜•íƒœë¡œ ë°˜í™˜.
+		//(HINT: ì´ í´ë˜ìŠ¤ëŠ” std::enable_shared_from_thisì—ì„œ ìƒì†ë°›ì•˜ë‹¤. ê·¸ë¦¬ê³  static_pointer_cast ì‚¬ìš©)
 
-		//return std::shared_ptr<T>((Player*)this); ///< ÀÌ·¸°Ô ÇÏ¸é ¾ÈµÉ°É???
+		//return std::shared_ptr<T>((Player*)this); ///< ì´ë ‡ê²Œ í•˜ë©´ ì•ˆë ê±¸???
 		//
 		return std::static_pointer_cast<T>(shared_from_this());
  	}
@@ -52,14 +52,14 @@ private:
 
 
 template <class T, class F, class... Args>
-//¼¼¼Ç¿¡¼­ ÇØ´çÇÔ¼ö È£Ãâ
+//ì„¸ì…˜ì—ì„œ í•´ë‹¹í•¨ìˆ˜ í˜¸ì¶œ
 void DoSyncAfter(uint32_t after, T instance, F memfunc, Args&&... args)
 {
 	static_assert(true == is_shared_ptr<T>::value, "T should be shared_ptr");
 	static_assert(true == std::is_convertible<T, std::shared_ptr<SyncExecutable>>::value, "T should be shared_ptr SyncExecutable");
 
-	//TODO: instanceÀÇ memfunc¸¦ bind·Î ¹­¾î¼­ LTimer->PushTimerJob() ¼öÇà
-	///# good! Á¦´ë·Î Çß´Ù.
+	//TODO: instanceì˜ memfuncë¥¼ bindë¡œ ë¬¶ì–´ì„œ LTimer->PushTimerJob() ìˆ˜í–‰
+	///# good! ì œëŒ€ë¡œ í–ˆë‹¤.
 	auto task = std::bind(memfunc, instance, std::forward<Args>(args)...);
 	LTimer->PushTimerJob(std::static_pointer_cast<SyncExecutable>(instance),
 							task ,after);

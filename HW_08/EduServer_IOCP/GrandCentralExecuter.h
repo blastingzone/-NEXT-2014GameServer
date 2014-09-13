@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Exception.h"
 #include "TypeTraits.h"
 #include "XTL.h"
@@ -14,17 +14,17 @@ public:
 
 	void DoDispatch(const GCETask& task)
 	{
-		CRASH_ASSERT(LThreadType == THREAD_IO_WORKER); ///< ÀÏ´Ü IO thread Àü¿ë
+		CRASH_ASSERT(LThreadType == THREAD_IO_WORKER); ///< ì¼ë‹¨ IO thread ì „ìš©
 
 		
 		if (InterlockedIncrement64(&mRemainTaskCount) > 1)
 		{
-			//TODO: ÀÌ¹Ì ´©±º°¡ ÀÛ¾÷ÁßÀÌ¸é ¾î¶»°Ô?
+			//TODO: ì´ë¯¸ ëˆ„êµ°ê°€ ì‘ì—…ì¤‘ì´ë©´ ì–´ë–»ê²Œ?
 			mCentralTaskQueue.push(task);
 		}
 		else
 		{
-			/// Ã³À½ ÁøÀÔÇÑ ³ğÀÌ Ã¥ÀÓÁö°í ´ÙÇØÁÖÀÚ -.-;
+			/// ì²˜ìŒ ì§„ì…í•œ ë†ˆì´ ì±…ì„ì§€ê³  ë‹¤í•´ì£¼ì -.-;
 
 			mCentralTaskQueue.push(task);
 			
@@ -33,10 +33,10 @@ public:
 				GCETask task;
 				if (mCentralTaskQueue.try_pop(task))
 				{
-					//TODO: task¸¦ ¼öÇàÇÏ°í mRemainTaskCount¸¦ ÇÏ³ª °¨¼Ò 
-					// mRemainTaskCount°¡ 0ÀÌ¸é break;
+					//TODO: taskë¥¼ ìˆ˜í–‰í•˜ê³  mRemainTaskCountë¥¼ í•˜ë‚˜ ê°ì†Œ 
+					// mRemainTaskCountê°€ 0ì´ë©´ break;
 
-					task(); ///# ÀÌ°Å ÇØÁà¾ßÁö
+					task(); ///# ì´ê±° í•´ì¤˜ì•¼ì§€
 
 					if (InterlockedDecrement64(&mRemainTaskCount) == 0)
 						break;
@@ -60,17 +60,17 @@ extern GrandCentralExecuter* GGrandCentralExecuter;
 template <class T, class F, class... Args>
 void GCEDispatch(T instance, F memfunc, Args&&... args)
 {
-	/// shared_ptrÀÌ ¾Æ´Ñ ³à¼®Àº ¹ŞÀ¸¸é ¾ÈµÈ´Ù. ÀÛ¾÷Å¥¿¡ µé¾îÀÖ´ÂÁß¿¡ ¾ø¾îÁú ¼ö ÀÖÀ¸´Ï..
+	/// shared_ptrì´ ì•„ë‹Œ ë…€ì„ì€ ë°›ìœ¼ë©´ ì•ˆëœë‹¤. ì‘ì—…íì— ë“¤ì–´ìˆëŠ”ì¤‘ì— ì—†ì–´ì§ˆ ìˆ˜ ìˆìœ¼ë‹ˆ..
 	static_assert(true == is_shared_ptr<T>::value, "T should be shared_ptr");
 
-	//TODO: intanceÀÇ memfunc¸¦ std::bind·Î ¹­¾î¼­ Àü´Ş
-	//T&& -> ¿À·ÎÁö ¿ìÃø¿¡¸¸ ¿Ã ¼ö ÀÖ´Â Å¸ÀÔ rvalue
-	//vector µî¿¡¼­ ±âÁ¸ÀÇ Å©±âº¸´Ù ´õ Å« Å©±â°¡ ÇÊ¿äÇÒ ¶§ 
-	//±âÁ¸ÀÇ ¸Ş¸ğ¸®¸¦ »èÁ¦ÇÏ°í ÀÓ½Ã¸Ş¸ğ¸®¸¦ ÇÒ´çÇÏ´Â µîÀÇ ºÒÇÊ¿äÇÑ ¿¬»êÀÌ ÀÏ¾î³²
-	//ÀÌ¸¦ ¹æÁöÇÏ±â À§ÇØ »ı°Ü³²
-	//´Ù¾çÇÑ c++ valueµé http://en.cppreference.com/w/cpp/language/value_category
-	//ÅÛÇÃ¸´»ç¿ë½Ã ÀÎÀÚÃß·ĞÀ¸·Î ÀÎÇØ ÅÛÇÃ¸´ »ç¿ë½Ã rvalue¿Í lvalueÀÇ °æ°è°¡ ¸ğÈ£ÇØÁ® ¹ö¸°´Ù. 
-	//forward´Â rvalue´Â rvalue·Î lvalue´Â lvalue·Î Ä³½ºÆÃÇÏ¿© ÅÛÇÃ¸´ÀÌ ÇØ±ò¸®Áö ¾Ê°Ô ÇØÁØ´Ù.
+	//TODO: intanceì˜ memfuncë¥¼ std::bindë¡œ ë¬¶ì–´ì„œ ì „ë‹¬
+	//T&& -> ì˜¤ë¡œì§€ ìš°ì¸¡ì—ë§Œ ì˜¬ ìˆ˜ ìˆëŠ” íƒ€ì… rvalue
+	//vector ë“±ì—ì„œ ê¸°ì¡´ì˜ í¬ê¸°ë³´ë‹¤ ë” í° í¬ê¸°ê°€ í•„ìš”í•  ë•Œ 
+	//ê¸°ì¡´ì˜ ë©”ëª¨ë¦¬ë¥¼ ì‚­ì œí•˜ê³  ì„ì‹œë©”ëª¨ë¦¬ë¥¼ í• ë‹¹í•˜ëŠ” ë“±ì˜ ë¶ˆí•„ìš”í•œ ì—°ì‚°ì´ ì¼ì–´ë‚¨
+	//ì´ë¥¼ ë°©ì§€í•˜ê¸° ìœ„í•´ ìƒê²¨ë‚¨
+	//ë‹¤ì–‘í•œ c++ valueë“¤ http://en.cppreference.com/w/cpp/language/value_category
+	//í…œí”Œë¦¿ì‚¬ìš©ì‹œ ì¸ìì¶”ë¡ ìœ¼ë¡œ ì¸í•´ í…œí”Œë¦¿ ì‚¬ìš©ì‹œ rvalueì™€ lvalueì˜ ê²½ê³„ê°€ ëª¨í˜¸í•´ì ¸ ë²„ë¦°ë‹¤. 
+	//forwardëŠ” rvalueëŠ” rvalueë¡œ lvalueëŠ” lvalueë¡œ ìºìŠ¤íŒ…í•˜ì—¬ í…œí”Œë¦¿ì´ í•´ê¹”ë¦¬ì§€ ì•Šê²Œ í•´ì¤€ë‹¤.
 
 	///# very good!
 
