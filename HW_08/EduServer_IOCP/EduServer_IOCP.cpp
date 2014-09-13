@@ -7,7 +7,7 @@
 #include "EduServer_IOCP.h"
 #include "ThreadLocal.h"
 #include "ClientSession.h"
-#include "SessionManager.h"
+#include "ClientSessionManager.h"
 #include "IocpManager.h"
 #include "LockOrderChecker.h"
 #include "PlayerManager.h"
@@ -22,7 +22,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	/// Global Managers
 	GMemoryPool = new MemoryPool;
-	GSessionManager = new SessionManager;
+	GClientSessionManager = new ClientSessionManager;
 	GIocpManager = new IocpManager;
 	GGrandCentralExecuter = new GrandCentralExecuter;
 	GPlayerManager = new PlayerManager;
@@ -48,7 +48,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	printf_s("End Server\n");
 
 	delete GIocpManager;
-	delete GSessionManager;
+	delete GClientSessionManager;
 	delete GMemoryPool;
 
 	return 0;

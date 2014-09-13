@@ -29,9 +29,9 @@ void ClientSession::SessionReset()
 
 	mRecvBuffer.BufferReset();
 
-	mSendBufferLock.EnterLock();
+	mSendBufferLock.EnterWriteLock();
 	mSendBuffer.BufferReset();
-	mSendBufferLock.LeaveLock();
+	mSendBufferLock.LeaveWriteLock();
 
 	LINGER lingerOption;
 	lingerOption.l_onoff = 1;
