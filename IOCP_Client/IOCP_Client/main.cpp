@@ -8,6 +8,7 @@
 #define MAX_CONNECTION 20
 #define TOTAL_MESSAGE_BYTE 2000
 #define TIMEOUT_MILLISECOND 20000
+#define SERVER_PORT 9000
 
 typedef struct
 {
@@ -20,17 +21,14 @@ typedef struct
 	DWORD m_Flag;
 	int m_SessionId;
 
+	int m_TotalSendSize;
+	int m_TotalRecvSize;
+
 } Client_Session;
 
 #define IOCP_WAIT_TIME 20
 
-SRWLOCK g_pLock;
-
-DWORD g_RecvedDataByte = 0;
-DWORD g_SendedDataByte = 0;
-
 DWORD g_StartTimer;
-unsigned int g_TestCount = 0;
 
 static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 {
@@ -64,25 +62,7 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 			clientSession->m_Flag = 0;
 			if ( !WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, (LPWSAOVERLAPPED)( clientSession ), NULL ) )
 			{
-				AcquireSRWLockExclusive( &g_pLock );
-
-				g_RecvedDataByte += dwByteRecv;
-				if ( g_TestCount < 9 )
-				{
-					if ( clientSession->m_WsaRecvBuf.buf[0] == clientSession->m_SessionId )
-					{
-						printf_s( "Echo Data OK \n" );
-						// 켰더니 지옥됨
-						//printf_s( "%s \n", clientSession->m_WsaRecvBuf.buf );
-					}
-					else
-					{
-						printf_s( "Echo Data.... SOMETHING WRONG!\n" );
-					}
-					++g_TestCount;
-				}
-
-				ReleaseSRWLockExclusive( &g_pLock );
+				clientSession->m_TotalRecvSize += dwByteRecv;
 
 				continue;
 			}
@@ -109,8 +89,6 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 
 int main( void )
 {
-	InitializeSRWLock( &g_pLock );
-
 	WSADATA wsadata;
 	if ( WSAStartup( MAKEWORD( 2, 2 ), &wsadata ) != 0 )
 	{
@@ -144,7 +122,7 @@ int main( void )
 		ZeroMemory( &SockAddr, sizeof( SockAddr ) );
 		SockAddr.sin_family = AF_INET;
 		SockAddr.sin_addr.s_addr = inet_addr( "127.0.0.1" ); //local network
-		SockAddr.sin_port = htons( 9001 );
+		SockAddr.sin_port = htons( SERVER_PORT );
 
 		if ( hCompletionPort != CreateIoCompletionPort( (HANDLE)( clientSession->m_Socket ), hCompletionPort, (ULONG_PTR)clientSession, 0 ) )
 		{
@@ -191,12 +169,9 @@ int main( void )
 		}
 		else
 		{
-			AcquireSRWLockExclusive( &g_pLock );
-
-			g_SendedDataByte += sendByte;
+			clientSession->m_TotalSendSize += sendByte;
 			printf_s( "Data Send OK \n" );
-
-			ReleaseSRWLockExclusive( &g_pLock );
+			m_sessionList.push_back( clientSession );
 		}
 		
 	}
@@ -211,16 +186,10 @@ int main( void )
 	// 타이머 초기화
 	g_StartTimer = GetTickCount();
 
-	while ( g_RecvedDataByte < TOTAL_MESSAGE_BYTE && GetTickCount() - g_StartTimer < TIMEOUT_MILLISECOND)
+	while ( GetTickCount() - g_StartTimer < TIMEOUT_MILLISECOND)
 	{
 		Sleep( 100 );
 	}
-
-	// 이젠 데이터를 못 받기 시작
-	printf_s( "Time Passed : %f \n", g_StartTimer / 1000.f );
-	printf_s( "Send Data : %d (maybe...) \n", TOTAL_MESSAGE_BYTE );
-	printf_s( "Real Send Data : %d \n", g_SendedDataByte );
-	printf_s( "Recv Data : %d \n", g_RecvedDataByte );
 
 	for ( int i = 0; i < m_sessionList.size(); ++i )
 	{
@@ -230,6 +199,24 @@ int main( void )
 			closesocket( m_sessionList[i]->m_Socket );
 		}
 	}
+
+
+	printf_s( "Time Passed : %f \n", g_StartTimer / 1000.f );
+	printf_s( "Send Data : %d (maybe...) \n", TOTAL_MESSAGE_BYTE );
+
+	// 보내고 받은 데이터 전부 더해서 총 데이터 전송량 계산
+	UINT64 sendDataByte = 0;
+	UINT64 recvDataByte = 0;
+	for ( int i = 0; i < MAX_CONNECTION; ++i )
+	{
+		recvDataByte += m_sessionList[i]->m_TotalRecvSize;
+		sendDataByte += m_sessionList[i]->m_TotalSendSize;
+	}
+
+	printf_s( "Real Send Data : %d \n", sendDataByte );
+	printf_s( "Recv Data : %d \n", recvDataByte );
+
+
 	m_sessionList.clear();
 	WSACleanup();
 
