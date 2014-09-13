@@ -148,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="ClientSession.h" />
+    <ClInclude Include="ClientSessionManager.h" />
     <ClInclude Include="DBContext.h" />
     <ClInclude Include="DBHelper.h" />
     <ClInclude Include="DBManager.h" />
@@ -157,14 +158,17 @@
     <ClInclude Include="FastSpinlock.h" />
     <ClInclude Include="GrandCentralExecuter.h" />
     <ClInclude Include="IocpManager.h" />
+    <ClInclude Include="IOThread.h" />
     <ClInclude Include="LockOrderChecker.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="ObjectPool.h" />
+    <ClInclude Include="OverlappedIOContext.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerManager.h" />
     <ClInclude Include="PlayerWideEvent.h" />
-    <ClInclude Include="SessionManager.h" />
+    <ClInclude Include="ServerSession.h" />
+    <ClInclude Include="Session.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SyncExecutable.h" />
     <ClInclude Include="targetver.h" />
@@ -176,6 +180,7 @@
   <ItemGroup>
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="ClientSession.cpp" />
+    <ClCompile Include="ClientSessionManager.cpp" />
     <ClCompile Include="DBContext.cpp" />
     <ClCompile Include="DBHelper.cpp" />
     <ClCompile Include="DBManager.cpp" />
@@ -185,13 +190,16 @@
     <ClCompile Include="FastSpinlock.cpp" />
     <ClCompile Include="GrandCentralExecuter.cpp" />
     <ClCompile Include="IocpManager.cpp" />
+    <ClCompile Include="IOThread.cpp" />
     <ClCompile Include="LockOrderChecker.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
+    <ClCompile Include="OverlappedIOContext.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerManager.cpp" />
     <ClCompile Include="PlayerWideEvent.cpp" />
-    <ClCompile Include="SessionManager.cpp" />
+    <ClCompile Include="ServerSession.cpp" />
+    <ClCompile Include="Session.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

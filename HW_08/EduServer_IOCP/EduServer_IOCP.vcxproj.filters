@@ -68,9 +68,6 @@
     <ClInclude Include="TypeTraits.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="SessionManager.h">
-      <Filter>SessionHandling</Filter>
-    </ClInclude>
     <ClInclude Include="ClientSession.h">
       <Filter>SessionHandling</Filter>
     </ClInclude>
@@ -104,6 +101,21 @@
     <ClInclude Include="Log.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="ClientSessionManager.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="IOThread.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="OverlappedIOContext.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="Session.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerSession.h">
+      <Filter>SessionHandling</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -132,9 +144,6 @@
     </ClCompile>
     <ClCompile Include="GrandCentralExecuter.cpp">
       <Filter>Threading</Filter>
-    </ClCompile>
-    <ClCompile Include="SessionManager.cpp">
-      <Filter>SessionHandling</Filter>
     </ClCompile>
     <ClCompile Include="ClientSession.cpp">
       <Filter>SessionHandling</Filter>
@@ -168,6 +177,21 @@
     </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ClientSessionManager.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="IOThread.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="OverlappedIOContext.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="Session.cpp">
+      <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerSession.cpp">
+      <Filter>SessionHandling</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

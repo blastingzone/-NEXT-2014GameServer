@@ -1,35 +1,30 @@
 #include "stdafx.h"
 #include "FastSpinlock.h"
-#include "MemoryPool.h"
-#include "ThreadLocal.h"
 #include "EduServer_IOCP.h"
 #include "ClientSession.h"
-#include "SessionManager.h"
+#include "ClientSessionManager.h"
 #include "IocpManager.h"
 
 
-SessionManager* GSessionManager = nullptr;
+ClientSessionManager* GClientSessionManager = nullptr;
 
-SessionManager::SessionManager() : mCurrentIssueCount(0), mCurrentReturnCount(0), mLock(LO_FIRST_CLASS)
-{
-}
-
-SessionManager::~SessionManager()
+ClientSessionManager::~ClientSessionManager()
 {
 	for (auto it : mFreeSessionList)
 	{
-		xdelete(it);
+		delete it;
 	}
 }
 
-void SessionManager::PrepareSessions()
+void ClientSessionManager::PrepareClientSessions()
 {
+
 	CRASH_ASSERT(LThreadType == THREAD_MAIN);
 
 	for (int i = 0; i < MAX_CONNECTION; ++i)
 	{
-		ClientSession* client = xnew<ClientSession>();
-			
+		ClientSession* client = new ClientSession();
+
 		mFreeSessionList.push_back(client);
 	}
 }
@@ -38,7 +33,7 @@ void SessionManager::PrepareSessions()
 
 
 
-void SessionManager::ReturnClientSession(ClientSession* client)
+void ClientSessionManager::ReturnClientSession(ClientSession* client)
 {
 	FastSpinlockGuard guard(mLock);
 
@@ -51,7 +46,7 @@ void SessionManager::ReturnClientSession(ClientSession* client)
 	++mCurrentReturnCount;
 }
 
-bool SessionManager::AcceptSessions()
+bool ClientSessionManager::AcceptClientSessions()
 {
 	FastSpinlockGuard guard(mLock);
 
@@ -63,7 +58,7 @@ bool SessionManager::AcceptSessions()
 		++mCurrentIssueCount;
 
 		newClient->AddRef(); ///< refcount +1 for issuing 
-		
+
 		if (false == newClient->PostAccept())
 			return false;
 	}
