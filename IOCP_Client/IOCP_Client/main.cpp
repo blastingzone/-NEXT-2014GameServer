@@ -14,7 +14,7 @@
 #define MAX_CONNECTION 20
 #define TOTAL_MESSAGE_BYTE 20000
 #define MAX_BUFFER_SIZE 2048
-#define TIMEOUT_MILLISECOND 20000
+#define TIMEOUT_MILLISECOND 40000
 
 #define SERVER_PORT 9000
 
@@ -54,7 +54,20 @@ const int MessageHeaderSize = sizeof( MessageHeader );
 DWORD g_StartTimer;
 
 
-void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
+void WriteMessageToStream(
+	MyPacket::MessageType msgType,
+	const google::protobuf::MessageLite& message,
+	google::protobuf::io::CodedOutputStream& stream )
+{
+	MessageHeader messageHeader;
+	messageHeader.size = message.ByteSize();
+	messageHeader.type = msgType;
+	stream.WriteRaw( &messageHeader, sizeof( MessageHeader ) );
+	message.SerializeToCodedStream( &stream );
+}
+
+
+void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Client_Session* clientSession )
 {
 	MessageHeader messageHeader;
 
@@ -79,6 +92,38 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 			
+			// 로그인 성공하면 채팅을 보내기 시작
+			MyPacket::ChatRequest chatPacket;
+			std::string chat( "chatting!" );
+			chat.append( "아이디는 %d", clientSession->m_SessionId );
+
+			chatPacket.set_playerid( clientSession->m_SessionId );
+			chatPacket.set_playermessage(chat.c_str());
+			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *(clientSession->m_pOutputCodedStream) );
+
+			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
+			clientSession->m_WsaSendBuf.len = MAX_BUFFER_SIZE;
+
+			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
+			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
+			DWORD sendByte = 0;
+
+			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+			{
+				if ( WSAGetLastError() != WSA_IO_PENDING )
+				{
+					closesocket( clientSession->m_Socket );
+					delete clientSession;
+					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
+				}
+			}
+			else
+			{
+				clientSession->m_TotalSendSize += sendByte;
+				//printf_s( " Chat Data Send OK \n" );
+			}
+
+
 			break;
 		}
 			//서버에 only 에코 기능만 있을 때 테스트용
@@ -141,7 +186,7 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 			clientSession->m_Flag = 0;
 			if ( !WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, (LPWSAOVERLAPPED)( clientSession ), NULL ) )
 			{
-				PacketHandler( *(clientSession->m_pInputCodedStream) );
+				PacketHandler( *(clientSession->m_pInputCodedStream), clientSession );
 				clientSession->m_TotalRecvSize += dwByteRecv;
 
 				continue;
@@ -165,18 +210,6 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 	}
 
 	return 0;
-}
-
-void WriteMessageToStream(
-	MyPacket::MessageType msgType,
-	const google::protobuf::MessageLite& message,
-	google::protobuf::io::CodedOutputStream& stream )
-{
-	MessageHeader messageHeader;
-	messageHeader.size = message.ByteSize();
-	messageHeader.type = msgType;
-	stream.WriteRaw( &messageHeader, sizeof( MessageHeader ) );
-	message.SerializeToCodedStream( &stream );
 }
 
 int main( void )
@@ -254,10 +287,10 @@ int main( void )
 // 		}
 // 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
 		clientSession->m_WsaSendBuf.buf = (CHAR*)(clientSession->m_SendBuffer);
-		clientSession->m_WsaSendBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
+		clientSession->m_WsaSendBuf.len = MAX_BUFFER_SIZE;
 
 		clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
-		clientSession->m_WsaRecvBuf.len = TOTAL_MESSAGE_BYTE / MAX_CONNECTION;
+		clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
 		DWORD sendByte = 0;
 
 		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
