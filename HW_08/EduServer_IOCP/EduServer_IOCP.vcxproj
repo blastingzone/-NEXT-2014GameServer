@@ -164,6 +164,7 @@
     <ClInclude Include="IOThread.h" />
     <ClInclude Include="LockOrderChecker.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Map.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MyPacket.pb.h" />
     <ClInclude Include="ObjectPool.h" />
@@ -199,6 +200,7 @@
     <ClCompile Include="IOThread.cpp" />
     <ClCompile Include="LockOrderChecker.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Map.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MyPacket.pb.cc" />
     <ClCompile Include="OverlappedIOContext.cpp" />

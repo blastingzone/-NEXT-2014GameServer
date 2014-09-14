@@ -18,7 +18,7 @@ ClientSessionManager::~ClientSessionManager()
 
 void ClientSessionManager::PrepareClientSessions()
 {
-
+	//최초 생성
 	CRASH_ASSERT(LThreadType == THREAD_MAIN);
 
 	for (int i = 0; i < MAX_CONNECTION; ++i)

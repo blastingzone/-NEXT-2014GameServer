@@ -131,6 +131,9 @@
     <ClInclude Include="ContentsConfig.h">
       <Filter>Contents</Filter>
     </ClInclude>
+    <ClInclude Include="Map.h">
+      <Filter>Contents</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -214,5 +217,13 @@
     <ClCompile Include="PlayerDBContext.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
+    <ClCompile Include="Map.cpp">
+      <Filter>Contents</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\SQL\GameDB.sql">
+      <Filter>Contents</Filter>
+    </None>
   </ItemGroup>
 </Project>
