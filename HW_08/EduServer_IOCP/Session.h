@@ -8,17 +8,8 @@
 
 class Session
 {
-
-	struct MessageHeader
-	{
-		google::protobuf::uint32 size;
-		MyPacket::MessageType type;
-	};
-
-	const int MessageHeaderSize = sizeof( MessageHeader );
-
-
 public:
+
 	Session(size_t sendBufSize, size_t recvBufSize);
 	virtual ~Session() {}
 
@@ -44,8 +35,6 @@ public:
 
 	void	SetSocket(SOCKET sock) { mSocket = sock; }
 	SOCKET	GetSocket() const { return mSocket; }
-
-	void PacketHandler();
 
 	void EchoBack();
 

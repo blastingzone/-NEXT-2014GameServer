@@ -5,6 +5,14 @@
 
 class ClientSessionManager;
 
+//헤더추가
+struct MessageHeader
+{
+	google::protobuf::uint32 size;
+	MyPacket::MessageType type;
+};
+
+const int MessageHeaderSize = sizeof(MessageHeader);
 
 class ClientSession : public Session, public ObjectPool < ClientSession >
 {
@@ -19,6 +27,8 @@ public:
 
 	virtual void OnDisconnect(DisconnectReason dr);
 	virtual void OnRelease();
+
+	void PacketHandler();
 
 public:
 	Player			mPlayer;

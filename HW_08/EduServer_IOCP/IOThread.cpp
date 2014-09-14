@@ -118,7 +118,7 @@ void IOThread::DoIocpJob()
 		/// for test
 		//remote->EchoBack();
 		// 여기에 패킷처리 들어간다!!
-		remote->PacketHandler();
+		static_cast<ClientSession*>(remote)->PacketHandler();
 		completionOk = remote->PreRecv();
 
 		break;

@@ -1,4 +1,5 @@
 #pragma once
+#include <map>
 
 #define MAP_MAX_SIZE_TOP		1000
 #define MAP_MAX_SIZE_BOT		-1000
@@ -13,30 +14,34 @@
 class Zone;
 typedef std::shared_ptr<Zone> ZonePtr;
 
+class Player;
+typedef std::shared_ptr<Player> PlayerPtr;
+typedef std::map<int, PlayerPtr> PlayerList;
+
 class Map
 {
 public:
 	Map();
 	~Map();
 
+	ZonePtr GetZone(float x, float y);
 
-	
 
 private:
 
 	ZonePtr mZoneList[MAP_ZONE_ROW_NUM][MAP_ZONE_COL_NUM];
 
-
 	void MakeZoneList();
-
 };
 
 
-//원래는 서로 연결되게 만들고 싶었다. 하지만 깔끔하게 포기하였다.
 class Zone
 {
-	enum NEIGHBOR_TYPE { NEIGHBOR_T = 0, NEIGHBOR_L, NEIGHBOR_B, NEIGHBOR_R, 
-						 NEIGHBOR_TL, NEIGHBOR_TR, NEIGHBOR_BL, NEIGHBOR_BR, NEIGHBOR_MAX };
+	//원래는 서로 연결되게 만들고 싶었다. 하지만 깔끔하게 포기하였다.
+	enum NEIGHBOR_TYPE {
+		NEIGHBOR_T = 0, NEIGHBOR_L, NEIGHBOR_B, NEIGHBOR_R,
+		NEIGHBOR_TL, NEIGHBOR_TR, NEIGHBOR_BL, NEIGHBOR_BR, NEIGHBOR_MAX
+	};
 
 	//    TopLeft(TL)      TopRight(TR)
 	//              0------1
@@ -55,12 +60,14 @@ public:
 	Zone(int zoneSize, int maxSize);
 	~Zone();
 
+	void		PushPlayer(PlayerPtr player);
+	PlayerPtr	PopPlayer();
+
 private:
 
 	ZonePtr mNeighbor[NEIGHBOR_MAX];
 	float	mConner[4][2];
-	
 
-
+	PlayerList mPlayerList;
 };
 
