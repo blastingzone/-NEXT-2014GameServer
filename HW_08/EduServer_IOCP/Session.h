@@ -45,7 +45,7 @@ public:
 	void	SetSocket(SOCKET sock) { mSocket = sock; }
 	SOCKET	GetSocket() const { return mSocket; }
 
-	void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream );
+	void PacketHandler();
 
 	void EchoBack();
 

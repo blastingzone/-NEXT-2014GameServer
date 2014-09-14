@@ -116,8 +116,9 @@ void IOThread::DoIocpJob()
 		remote->RecvCompletion(dwTransferred);
 
 		/// for test
-		remote->EchoBack();
+		//remote->EchoBack();
 		// 여기에 패킷처리 들어간다!!
+		remote->PacketHandler();
 		completionOk = remote->PreRecv();
 
 		break;
