@@ -169,4 +169,3 @@ void ClientSession::OnRelease()
 
 	GClientSessionManager->ReturnClientSession(this);
 }
-

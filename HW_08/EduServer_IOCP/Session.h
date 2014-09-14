@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "CircularBuffer.h"
 #include "OverlappedIOContext.h"
-#include <deque>
 
 
 class Session

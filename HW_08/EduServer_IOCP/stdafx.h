@@ -20,6 +20,11 @@
 #include <cstdint>
 #include <memory>
 #include <functional>
+#include <deque>
+#include <vector>
+#include <type_traits>
+#include <iostream>
+#include <sstream>
 
 #include <ppl.h>
 #include <concurrent_queue.h>

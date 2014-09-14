@@ -23,6 +23,8 @@ DWORD IOThread::Run()
 
 	while (true)
 	{
+		LTimer->DoTimerJob();
+
 		DoIocpJob();
 
 		DoSendJob(); ///< aggregated sends
@@ -151,4 +153,3 @@ void IOThread::DoSendJob()
 	}
 
 }
-
