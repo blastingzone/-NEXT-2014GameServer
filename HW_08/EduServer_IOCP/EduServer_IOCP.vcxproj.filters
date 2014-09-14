@@ -21,6 +21,9 @@
     <Filter Include="SessionHandling">
       <UniqueIdentifier>{040daadd-e696-45bf-955b-9a78bfb5c6ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Packet">
+      <UniqueIdentifier>{1bc9eac3-6a8f-44b4-9022-d36662499559}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -116,6 +119,9 @@
     <ClInclude Include="ServerSession.h">
       <Filter>SessionHandling</Filter>
     </ClInclude>
+    <ClInclude Include="MyPacket.pb.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -192,6 +198,9 @@
     </ClCompile>
     <ClCompile Include="ServerSession.cpp">
       <Filter>SessionHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="MyPacket.pb.cc">
+      <Filter>Packet</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
