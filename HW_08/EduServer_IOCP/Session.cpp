@@ -251,7 +251,6 @@ void Session::PacketHandler()
 	memcpy( &messageHeader, start, MessageHeaderSize );
 	mRecvBuffer.Remove( MessageHeaderSize );
 
-
 	const void* pPacket = mRecvBuffer.GetBufferStart();
 	int remainSize = 0;
 
@@ -266,6 +265,12 @@ void Session::PacketHandler()
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
 		printf( "Player Id : %d \n", message.playerid() );
+
+		// 이제 db 에서 저 플레이어의 이름을 받아와서 LoginResult에 채운 다음 보내줘야 함
+		MyPacket::LoginResult loginResult;
+
+		loginResult.set_playerid( message.playerid() );
+
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_CHAT:
@@ -273,6 +278,8 @@ void Session::PacketHandler()
 		MyPacket::ChatRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
+
+
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_MOVE:
