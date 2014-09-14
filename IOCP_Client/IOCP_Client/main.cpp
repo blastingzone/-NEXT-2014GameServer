@@ -6,7 +6,7 @@
 #pragma comment(lib, "ws2_32.lib") 
 
 #define MAX_CONNECTION 20
-#define TOTAL_MESSAGE_BYTE 2000
+#define TOTAL_MESSAGE_BYTE 20000
 #define TIMEOUT_MILLISECOND 20000
 #define SERVER_PORT 9000
 
