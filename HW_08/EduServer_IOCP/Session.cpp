@@ -243,3 +243,49 @@ void Session::EchoBack()
 
 }
 
+void Session::PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
+{
+	MessageHeader messageHeader;
+
+	while ( codedInputStream.ReadRaw( &messageHeader, MessageHeaderSize ) )
+	{
+		const void* pPacket = NULL;
+		int remainSize = 0;
+		codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
+		if ( remainSize < (signed)messageHeader.size )
+			break;
+
+		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
+		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
+
+		codedInputStream.Skip( messageHeader.size );
+
+		switch ( messageHeader.type )
+		{
+		case MyPacket::MessageType::PKT_CS_LOGIN:
+		{
+			MyPacket::LoginRequest message;
+			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+				break;
+			printf( "Player Id : %d \n", message.playerid() );
+			break;
+		}
+		case MyPacket::MessageType::PKT_CS_CHAT:
+		{
+			MyPacket::ChatRequest message;
+			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+				break;
+			break;
+		}
+		case MyPacket::MessageType::PKT_CS_MOVE:
+		{
+			MyPacket::MoveRequest message;
+			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+				break;
+			break;
+		}
+		}
+
+	}
+}
+

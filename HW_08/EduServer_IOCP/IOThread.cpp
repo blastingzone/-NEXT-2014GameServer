@@ -117,7 +117,7 @@ void IOThread::DoIocpJob()
 
 		/// for test
 		remote->EchoBack();
-
+		// 여기에 패킷처리 들어간다!!
 		completionOk = remote->PreRecv();
 
 		break;
