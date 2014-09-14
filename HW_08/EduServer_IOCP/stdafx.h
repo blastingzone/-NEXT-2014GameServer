@@ -25,6 +25,7 @@
 #include <type_traits>
 #include <iostream>
 #include <sstream>
+#include <wchar.h>
 
 #include <ppl.h>
 #include <concurrent_queue.h>

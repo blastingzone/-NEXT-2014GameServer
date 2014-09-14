@@ -122,6 +122,15 @@
     <ClInclude Include="MyPacket.pb.h">
       <Filter>Packet</Filter>
     </ClInclude>
+    <ClInclude Include="SQLStatement.h">
+      <Filter>Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerDBContext.h">
+      <Filter>Contents</Filter>
+    </ClInclude>
+    <ClInclude Include="ContentsConfig.h">
+      <Filter>Contents</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -201,6 +210,9 @@
     </ClCompile>
     <ClCompile Include="MyPacket.pb.cc">
       <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerDBContext.cpp">
+      <Filter>Contents</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
