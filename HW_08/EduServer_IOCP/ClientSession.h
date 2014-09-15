@@ -28,8 +28,6 @@ public:
 	virtual void OnDisconnect(DisconnectReason dr);
 	virtual void OnRelease();
 
-	void PacketHandler();
-
 public:
 	Player			mPlayer;
 

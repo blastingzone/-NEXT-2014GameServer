@@ -8,8 +8,17 @@
 
 class Session
 {
-public:
 
+	struct MessageHeader
+	{
+		google::protobuf::uint32 size;
+		MyPacket::MessageType type;
+	};
+
+	const int MessageHeaderSize = sizeof( MessageHeader );
+
+
+public:
 	Session(size_t sendBufSize, size_t recvBufSize);
 	virtual ~Session() {}
 
@@ -35,6 +44,20 @@ public:
 
 	void	SetSocket(SOCKET sock) { mSocket = sock; }
 	SOCKET	GetSocket() const { return mSocket; }
+
+	void PacketHandler();
+	void WriteMessageToStream(
+		MyPacket::MessageType msgType,
+		const google::protobuf::MessageLite& message,
+		google::protobuf::io::CodedOutputStream& stream )
+	{
+		MessageHeader messageHeader;
+		messageHeader.size = message.ByteSize();
+		messageHeader.type = msgType;
+		stream.WriteRaw( &messageHeader, sizeof( MessageHeader ) );
+		message.SerializeToCodedStream( &stream );
+	}
+
 
 	void EchoBack();
 
