@@ -4,6 +4,8 @@
 #include "ContentsConfig.h"
 class ClientSession;
 
+class Zone;
+typedef std::shared_ptr<Zone> ZonePtr;
 
 class Player : public SyncExecutable
 {
@@ -14,6 +16,9 @@ public:
 	int GetPlayerId() { return mPlayerId; }
 	bool IsAlive() { return mIsAlive;  }
 	void Start(int heartbeat);
+
+	//자신의 위치를 이용해서 존을 설정
+	void SetZone();
 
 	void OnTick(); ///< 로그인후 1초마다 불리는 기능
 
@@ -68,6 +73,7 @@ private:
 	/// 버프 리스트는 lock없이 GCE로 해보기
 	std::map<int, int> mBuffList; ///< (id, time)
 
+	ZonePtr				 mZone;
 	ClientSession* const mSession;
 	friend class ClientSession;
 };

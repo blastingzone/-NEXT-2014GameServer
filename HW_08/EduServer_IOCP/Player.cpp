@@ -8,6 +8,7 @@
 #include "GrandCentralExecuter.h"
 #include "PlayerDBContext.h"
 #include "DBManager.h"
+#include "Map.h"
 
 Player::Player(ClientSession* session) : mSession(session)
 {
@@ -22,6 +23,9 @@ Player::~Player()
 void Player::PlayerReset()
 {
 	FastSpinlockGuard criticalSection(mPlayerLock);
+
+	mZone->PopPlayer(mPlayerId);
+	mZone = nullptr;
 
 	memset(mPlayerName, 0, sizeof(mPlayerName));
 	memset(mComment, 0, sizeof(mComment));
@@ -45,8 +49,10 @@ void Player::Start(int heartbeat)
 	/// ID 발급 및 플레잉어 맵에 등록
 	mPlayerId = GPlayerManager->RegisterPlayer(GetSharedFromThis<Player>());
 
+	SetZone();
+
 	/// 생명 불어넣기 ㄱㄱ
-	OnTick();
+	//OnTick();
 
 }
 
@@ -137,6 +143,8 @@ void Player::ResponseUpdatePosition(float x, float y, float z)
 	mPosX = x;
 	mPosY = y;
 	mPosZ = z;
+
+	SetZone();
 }
 
 void Player::RequestUpdateComment(const wchar_t* comment)
@@ -190,4 +198,10 @@ void Player::TestDeletePlayerData(int playerId)
 void Player::ResponseDeletePlayerData(int playerId)
 {
 	wprintf_s(L"ID[%d] Player Delete\n", playerId);
+}
+
+void Player::SetZone()
+{
+	mZone = GMap->GetZone(mPosX, mPosZ);
+	mZone->PushPlayer(GetSharedFromThis<Player>());
 }

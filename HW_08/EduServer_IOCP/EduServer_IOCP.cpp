@@ -13,6 +13,7 @@
 #include "PlayerManager.h"
 #include "GrandCentralExecuter.h"
 #include "DBManager.h"
+#include "Map.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -28,6 +29,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	GGrandCentralExecuter = new GrandCentralExecuter;
 	GPlayerManager = new PlayerManager;
 	GDatabaseManager = new DBManager;
+	GMap = new Map;
 
 	/// main thread도 lock order check...
 	LLockOrderChecker = new LockOrderChecker(-1);
@@ -56,7 +58,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	printf_s("End Server\n");
 
+	delete GMap;
 	delete GDatabaseManager;
+	delete GPlayerManager;
+	delete GGrandCentralExecuter;
 	delete GIocpManager;
 	delete GClientSessionManager;
 	delete GMemoryPool;

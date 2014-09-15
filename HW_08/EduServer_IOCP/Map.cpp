@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Map.h"
+#include "Player.h"
 
+Map* GMap = nullptr;
 
 Map::Map()
 {
@@ -61,4 +63,16 @@ Zone::Zone(float xTL, float yTL)
 
 Zone::~Zone()
 {
+}
+
+void Zone::PushPlayer(PlayerPtr player)
+{
+	mPlayerList[player->GetPlayerId()] = player;
+}
+
+PlayerPtr Zone::PopPlayer(int playerID)
+{
+	PlayerPtr player = mPlayerList[playerID];
+	mPlayerList.erase(playerID);
+	return player;
 }

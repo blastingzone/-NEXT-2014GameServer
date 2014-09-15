@@ -154,9 +154,6 @@ void ClientSession::AcceptCompletion()
 	//mPlayer.RequestLoad(id++);
 }
 
-
-
-
 void ClientSession::OnDisconnect(DisconnectReason dr)
 {
 	TRACE_THIS;
@@ -170,3 +167,4 @@ void ClientSession::OnRelease()
 
 	GClientSessionManager->ReturnClientSession(this);
 }
+

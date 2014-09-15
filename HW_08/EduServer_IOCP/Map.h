@@ -16,7 +16,7 @@ typedef std::shared_ptr<Zone> ZonePtr;
 
 class Player;
 typedef std::shared_ptr<Player> PlayerPtr;
-typedef std::map<int, PlayerPtr> PlayerList;
+typedef std::map<int, PlayerPtr> PlayerInZoneLIST;
 
 class Map
 {
@@ -34,6 +34,7 @@ private:
 	void MakeZoneList();
 };
 
+extern Map* GMap;
 
 class Zone
 {
@@ -60,14 +61,15 @@ public:
 	Zone(int zoneSize, int maxSize);
 	~Zone();
 
+	//이 부분 락으로 보호 필요
 	void		PushPlayer(PlayerPtr player);
-	PlayerPtr	PopPlayer();
+	PlayerPtr	PopPlayer(int playerID);
 
 private:
 
 	ZonePtr mNeighbor[NEIGHBOR_MAX];
 	float	mConner[4][2];
 
-	PlayerList mPlayerList;
+	PlayerInZoneLIST mPlayerList;
 };
 
