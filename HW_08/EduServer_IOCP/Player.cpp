@@ -12,7 +12,18 @@
 
 Player::Player(ClientSession* session) : mSession(session)
 {
-	PlayerReset();
+	memset( mPlayerName, 0, sizeof( mPlayerName ) );
+	memset( mComment, 0, sizeof( mComment ) );
+	mPlayerId = -1;
+	mIsValid = false;
+	mPosX = mPosY = mPosZ = 0;
+
+	/// 플레이어 맵에서 제거
+	GPlayerManager->UnregisterPlayer( mPlayerId );
+
+	mPlayerId = -1;
+	mHeartBeat = -1;
+	mIsAlive = false;
 }
 
 Player::~Player()
@@ -23,6 +34,8 @@ Player::~Player()
 void Player::PlayerReset()
 {
 	FastSpinlockGuard criticalSection(mPlayerLock);
+
+	SetZone();
 
 	mZone->PopPlayer(mPlayerId);
 	mZone = nullptr;
@@ -49,7 +62,7 @@ void Player::Start(int heartbeat)
 	/// ID 발급 및 플레잉어 맵에 등록
 	mPlayerId = GPlayerManager->RegisterPlayer(GetSharedFromThis<Player>());
 
-	SetZone();
+	
 
 	/// 생명 불어넣기 ㄱㄱ
 	//OnTick();

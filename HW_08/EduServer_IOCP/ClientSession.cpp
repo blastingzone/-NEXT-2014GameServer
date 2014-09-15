@@ -34,6 +34,9 @@ void ClientSession::SessionReset()
 	mSendBuffer.BufferReset();
 	mSendBufferLock.LeaveWriteLock();
 
+	ProtobufReleae();
+	ProtobufInit();
+
 	LINGER lingerOption;
 	lingerOption.l_onoff = 1;
 	lingerOption.l_linger = 0;
@@ -166,6 +169,7 @@ void ClientSession::OnRelease()
 	TRACE_THIS;
 
 	GClientSessionManager->ReturnClientSession(this);
+	ProtobufReleae();
 }
 
 
@@ -201,15 +205,17 @@ void ClientSession::PacketHandler()
 		char* name = "kim";
 		loginResult.set_playername( name );
 
-		// 당연하겠지만 매번 선언하면 성능 안좋음
-		// 주의 : nullptr로 설정하면 컴파일은 되지만 런타임에 동작하지 않음
-		google::protobuf::io::ArrayOutputStream* outputArrayStream = nullptr;
-		google::protobuf::io::CodedOutputStream* outputCodedStream = nullptr;
+		MyPacket::Position position;
+		position.set_x( 1.0f );
+		position.set_y( 2.0f );
+		position.set_z( 3.0f );
 
-		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *outputCodedStream );
+		loginResult.set_allocated_playerpos(&position);
+
+		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *m_pCodedOutputStream );
 
 		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
-		if ( false == PostSend( mSendBuffer.GetBufferStart(), loginResult.ByteSize() + MessageHeaderSize ) )
+		if ( false == PostSend( (const char*)m_SessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
 			break;
 
 		break;
@@ -219,7 +225,6 @@ void ClientSession::PacketHandler()
 		MyPacket::ChatRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
-
 
 		break;
 	}
@@ -233,5 +238,19 @@ void ClientSession::PacketHandler()
 	}
 
 	mRecvBuffer.Remove( messageHeader.size );
+}
+
+void ClientSession::ProtobufInit()
+{
+	m_pArrayOutputStream = new google::protobuf::io::ArrayOutputStream(m_SessionBuffer, MAX_BUFFER_SIZE);
+	m_pCodedOutputStream = new google::protobuf::io::CodedOutputStream( m_pArrayOutputStream );
+}
+
+void ClientSession::ProtobufReleae()
+{
+	if ( m_pArrayOutputStream )
+		delete m_pArrayOutputStream;
+	if ( m_pCodedOutputStream )
+		delete m_pCodedOutputStream;
 }
 

@@ -6,6 +6,8 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/text_format.h>
 
+#define MAX_BUFFER_SIZE 2048
+
 class ClientSessionManager;
 
 //헤더추가
@@ -27,6 +29,9 @@ public:
 	virtual ~ClientSession();
 
 	void SessionReset();
+
+	void ProtobufInit();
+	void ProtobufReleae();
 
 	bool PostAccept();
 	void AcceptCompletion();
@@ -54,7 +59,10 @@ public:
 private:
 
 	SOCKADDR_IN		mClientAddr;
+	google::protobuf::io::ArrayOutputStream* m_pArrayOutputStream = nullptr;
+	google::protobuf::io::CodedOutputStream* m_pCodedOutputStream = nullptr;
 
+	google::protobuf::uint8 m_SessionBuffer[MAX_BUFFER_SIZE];
 
 	friend class ClientSessionManager;
 };

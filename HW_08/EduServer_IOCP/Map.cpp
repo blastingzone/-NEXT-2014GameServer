@@ -72,7 +72,7 @@ void Zone::PushPlayer(PlayerPtr player)
 
 PlayerPtr Zone::PopPlayer(int playerID)
 {
-	PlayerPtr player = mPlayerList[playerID];
+	PlayerPtr player = mPlayerList.find( playerID )->second;
 	mPlayerList.erase(playerID);
 	return player;
 }

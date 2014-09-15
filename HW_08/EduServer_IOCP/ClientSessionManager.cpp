@@ -24,6 +24,7 @@ void ClientSessionManager::PrepareClientSessions()
 	for (int i = 0; i < MAX_CONNECTION; ++i)
 	{
 		ClientSession* client = new ClientSession();
+		client->ProtobufInit();
 
 		mFreeSessionList.push_back(client);
 	}
