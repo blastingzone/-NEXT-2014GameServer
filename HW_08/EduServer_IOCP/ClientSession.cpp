@@ -168,3 +168,70 @@ void ClientSession::OnRelease()
 	GClientSessionManager->ReturnClientSession(this);
 }
 
+
+void ClientSession::PacketHandler()
+{
+	MessageHeader messageHeader;
+
+	char* start = mRecvBuffer.GetBufferStart();
+	memcpy( &messageHeader, start, MessageHeaderSize );
+	mRecvBuffer.Remove( MessageHeaderSize );
+
+	const void* pPacket = mRecvBuffer.GetBufferStart();
+	int remainSize = 0;
+
+	google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
+	google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
+
+	switch ( messageHeader.type )
+	{
+	case MyPacket::MessageType::PKT_CS_LOGIN:
+	{
+		MyPacket::LoginRequest message;
+		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+			break;
+		printf( "Player Id : %d \n", message.playerid() );
+
+		// 이제 db 에서 저 플레이어의 이름을 받아와서 LoginResult에 채운 다음 보내줘야 함
+		MyPacket::LoginResult loginResult;
+
+		loginResult.set_playerid( message.playerid() );
+
+		// test name
+		char* name = "kim";
+		loginResult.set_playername( name );
+
+		// 당연하겠지만 매번 선언하면 성능 안좋음
+		// 주의 : nullptr로 설정하면 컴파일은 되지만 런타임에 동작하지 않음
+		google::protobuf::io::ArrayOutputStream* outputArrayStream = nullptr;
+		google::protobuf::io::CodedOutputStream* outputCodedStream = nullptr;
+
+		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *outputCodedStream );
+
+		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
+		if ( false == PostSend( mSendBuffer.GetBufferStart(), loginResult.ByteSize() + MessageHeaderSize ) )
+			break;
+
+		break;
+	}
+	case MyPacket::MessageType::PKT_CS_CHAT:
+	{
+		MyPacket::ChatRequest message;
+		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+			break;
+
+
+		break;
+	}
+	case MyPacket::MessageType::PKT_CS_MOVE:
+	{
+		MyPacket::MoveRequest message;
+		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+			break;
+		break;
+	}
+	}
+
+	mRecvBuffer.Remove( messageHeader.size );
+}
+
