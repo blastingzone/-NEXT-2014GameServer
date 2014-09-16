@@ -211,7 +211,9 @@ void ClientSession::PacketHandler()
 		position.set_z( 3.0f );
 
 		// MyToDo: message 안에 message 쓰는 방법을 찾아봐야한다...!
-		loginResult.set_allocated_playerpos(&position);
+		loginResult.mutable_playerpos()->set_x(1.0f);
+		loginResult.mutable_playerpos()->set_y( 2.0f );
+		loginResult.mutable_playerpos()->set_z( 3.0f );
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *m_pCodedOutputStream );
 
