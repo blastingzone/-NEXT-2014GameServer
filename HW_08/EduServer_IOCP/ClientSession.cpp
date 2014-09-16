@@ -210,11 +210,13 @@ void ClientSession::PacketHandler()
 		position.set_y( 2.0f );
 		position.set_z( 3.0f );
 
+		// MyToDo: message 안에 message 쓰는 방법을 찾아봐야한다...!
 		loginResult.set_allocated_playerpos(&position);
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *m_pCodedOutputStream );
 
 		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
+		// 하하 그런건 없었습니다!
 		if ( false == PostSend( (const char*)m_SessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
 			break;
 
