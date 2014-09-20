@@ -253,8 +253,13 @@ void ClientSession::ProtobufInit()
 void ClientSession::ProtobufReleae()
 {
 	if ( m_pArrayOutputStream )
-		delete m_pArrayOutputStream;
+	{
+		m_pArrayOutputStream;
+	}
+		
 	if ( m_pCodedOutputStream )
+	{
 		delete m_pCodedOutputStream;
+	}
 }
 
