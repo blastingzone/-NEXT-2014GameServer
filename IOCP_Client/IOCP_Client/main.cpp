@@ -41,6 +41,39 @@ typedef struct
 	google::protobuf::io::CodedInputStream* m_pInputCodedStream;
 } Client_Session;
 
+void deleteClientSession( Client_Session* session )
+{
+
+	closesocket( session->m_Socket );
+
+	if ( session->m_pInputCodedStream )
+	{
+		delete session->m_pInputCodedStream;
+		session->m_pInputCodedStream = nullptr;
+	}
+
+	if ( session->m_pInputArrayStream )
+	{
+		delete session->m_pInputArrayStream;
+		session->m_pInputArrayStream = nullptr;
+	}
+
+	if ( session->m_pOutputCodedStream )
+	{
+		delete session->m_pOutputCodedStream;
+		session->m_pOutputCodedStream = nullptr;
+	}
+
+	if ( session->m_pOutputArrayStream )
+	{
+		delete session->m_pOutputArrayStream;
+		session->m_pOutputArrayStream = nullptr;
+	}
+
+	delete session;
+	session = nullptr;
+}
+
 struct MessageHeader
 {
 	google::protobuf::uint32 size;
@@ -128,12 +161,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			{
 				if ( WSAGetLastError() != WSA_IO_PENDING )
 				{
-					closesocket( clientSession->m_Socket );
-					delete clientSession->m_pInputArrayStream;
-					delete clientSession->m_pInputCodedStream;
-					delete clientSession->m_pOutputCodedStream;
-					delete clientSession->m_pOutputArrayStream;
-					delete clientSession;
+					deleteClientSession( clientSession );
 					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
 				}
 			}
@@ -217,16 +245,6 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 				continue;
 			}
 		}
-		// disconnect
-		if ( clientSession )
-		{
-			closesocket( clientSession->m_Socket );
-			break;
-		}
-	}
-	if ( clientSession != nullptr )
-	{
-		delete clientSession;
 	}
 
 	return 0;
@@ -317,12 +335,7 @@ int main( void )
 		{
 			if ( WSAGetLastError() != WSA_IO_PENDING )
 			{
-				closesocket( m_sessionList[i]->m_Socket );
-				delete clientSession->m_pInputArrayStream;
-				delete clientSession->m_pInputCodedStream;
-				delete clientSession->m_pOutputCodedStream;
-				delete clientSession->m_pOutputArrayStream;
-				delete clientSession;
+				deleteClientSession( clientSession );
 				printf_s( "ClientSession::PostSend Error : %d\n", GetLastError() );
 
 				return -1;
@@ -331,7 +344,7 @@ int main( void )
 		else
 		{
 			clientSession->m_TotalSendSize += sendByte;
-			printf_s( "Data Send OK \n" );
+			printf_s( "Data Send OK ID : %d \n", clientSession->m_SessionId );
 			m_sessionList.push_back( clientSession );
 		}
 
@@ -379,11 +392,7 @@ int main( void )
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
-		delete m_sessionList[i]->m_pInputArrayStream;
-		delete m_sessionList[i]->m_pInputCodedStream;
-
-		delete m_sessionList[i]->m_pOutputArrayStream;
-		delete m_sessionList[i]->m_pOutputCodedStream;
+		deleteClientSession( m_sessionList[i] );
 	}
 
 	m_sessionList.clear();
