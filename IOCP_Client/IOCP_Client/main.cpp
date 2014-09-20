@@ -75,9 +75,22 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 	{
 		const void* pPacket = NULL;
 		int remainSize = 0;
-		codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
-		if ( remainSize < (signed)messageHeader.size )
+		bool IsOK = false;
+		IsOK = codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
+
+		if ( IsOK == false )
+		{
+			printf_s( "Get Direct Buffer Pointer FAILED!! \n" );
+			codedInputStream.ConsumedEntireMessage();
 			break;
+		}
+
+		if ( remainSize < (signed)messageHeader.size )
+		{
+			printf_s( "buffer remain size is lesser than Message!" );
+			break;
+		}
+			
 
 		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
 		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
@@ -92,6 +105,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 			
+			printf( "Login Success ! Player Id : %d \n", message.playerid() );
+
+
 			// 로그인 성공하면 채팅을 보내기 시작
 			MyPacket::ChatRequest chatPacket;
 			std::string chat( "chatting!" );
@@ -113,6 +129,10 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				if ( WSAGetLastError() != WSA_IO_PENDING )
 				{
 					closesocket( clientSession->m_Socket );
+					delete clientSession->m_pInputArrayStream;
+					delete clientSession->m_pInputCodedStream;
+					delete clientSession->m_pOutputCodedStream;
+					delete clientSession->m_pOutputArrayStream;
 					delete clientSession;
 					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
 				}
@@ -132,7 +152,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			MyPacket::LoginRequest message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
-			printf("Player Id : %d \n", message.playerid() );
+			printf("Player Id : %d \n", message.playerid());
 			break;
 		}
 		case MyPacket::MessageType::PKT_SC_CHAT:
@@ -298,6 +318,10 @@ int main( void )
 			if ( WSAGetLastError() != WSA_IO_PENDING )
 			{
 				closesocket( m_sessionList[i]->m_Socket );
+				delete clientSession->m_pInputArrayStream;
+				delete clientSession->m_pInputCodedStream;
+				delete clientSession->m_pOutputCodedStream;
+				delete clientSession->m_pOutputArrayStream;
 				delete clientSession;
 				printf_s( "ClientSession::PostSend Error : %d\n", GetLastError() );
 
@@ -355,10 +379,11 @@ int main( void )
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
-		delete m_sessionList[i]->m_pInputCodedStream;
 		delete m_sessionList[i]->m_pInputArrayStream;
-		delete m_sessionList[i]->m_pOutputCodedStream;
+		delete m_sessionList[i]->m_pInputCodedStream;
+
 		delete m_sessionList[i]->m_pOutputArrayStream;
+		delete m_sessionList[i]->m_pOutputCodedStream;
 	}
 
 	m_sessionList.clear();
