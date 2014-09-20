@@ -41,6 +41,8 @@ typedef struct
 	google::protobuf::io::CodedInputStream* m_pInputCodedStream;
 } Client_Session;
 
+std::vector<Client_Session*> g_sessionList;
+
 void deleteClientSession( Client_Session* session )
 {
 
@@ -100,7 +102,7 @@ void WriteMessageToStream(
 }
 
 
-void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Client_Session* clientSession )
+void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 {
 	MessageHeader messageHeader;
 
@@ -123,7 +125,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			printf_s( "buffer remain size is lesser than Message!" );
 			break;
 		}
-			
 
 		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
 		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
@@ -139,15 +140,22 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				break;
 			
 			printf( "Login Success ! Player Id : %d \n", message.playerid() );
-
+			printf( "Player Name : %s \n", message.playername() );
+			printf( "Player Position : %f, %f, %f \n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z() );
 
 			// 로그인 성공하면 채팅을 보내기 시작
+			// 주의 : 이 부분 잘 안돌아간다! 멀티스레드에서 하면 안 되는 것 같다
+			Client_Session* clientSession = g_sessionList[message.playerid()];
+
 			MyPacket::ChatRequest chatPacket;
 			std::string chat( "chatting!" );
 			chat.append( "아이디는 %d", clientSession->m_SessionId );
 
+			printf( "Chat Data : %s \n", chat.c_str() );
+
 			chatPacket.set_playerid( clientSession->m_SessionId );
 			chatPacket.set_playermessage(chat.c_str());
+
 			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *(clientSession->m_pOutputCodedStream) );
 
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
@@ -168,7 +176,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			else
 			{
 				clientSession->m_TotalSendSize += sendByte;
-				//printf_s( " Chat Data Send OK \n" );
+				printf_s( " Chat Data Send OK \n" );
 			}
 
 
@@ -234,7 +242,7 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 			clientSession->m_Flag = 0;
 			if ( !WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, (LPWSAOVERLAPPED)( clientSession ), NULL ) )
 			{
-				PacketHandler( *(clientSession->m_pInputCodedStream), clientSession );
+				PacketHandler( *(clientSession->m_pInputCodedStream) );
 				clientSession->m_TotalRecvSize += dwByteRecv;
 
 				continue;
@@ -267,7 +275,6 @@ int main( void )
 	SYSTEM_INFO si;
 	GetSystemInfo( &si );
 
-	std::vector<Client_Session*> m_sessionList;
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
@@ -303,7 +310,7 @@ int main( void )
 		//clientSession->m_WsaBuf.len = sizeof( clientSession->m_WsaBuf );
 
 		// id 할당
-		clientSession->m_SessionId = i % 10 + 1;
+		clientSession->m_SessionId = i;
 
 		// 출력 / 입력 스트림 생성
 		clientSession->m_pOutputArrayStream = new google::protobuf::io::ArrayOutputStream( clientSession->m_SendBuffer, MAX_BUFFER_SIZE );
@@ -318,12 +325,13 @@ int main( void )
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_CS_LOGIN, loginPacket, *(clientSession->m_pOutputCodedStream) );
 
-		// send 버퍼에 글자 채우기
+		// send 버퍼에 글자 채우기(old)
 // 		for ( int j = 0; j < TOTAL_MESSAGE_BYTE / MAX_CONNECTION; ++j )
 // 		{
 // 			clientSession->m_SendBuffer[j] = clientSession->m_SessionId;
 // 		}
 // 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
+
 		clientSession->m_WsaSendBuf.buf = (CHAR*)(clientSession->m_SendBuffer);
 		clientSession->m_WsaSendBuf.len = MAX_BUFFER_SIZE;
 
@@ -345,7 +353,7 @@ int main( void )
 		{
 			clientSession->m_TotalSendSize += sendByte;
 			printf_s( "Data Send OK ID : %d \n", clientSession->m_SessionId );
-			m_sessionList.push_back( clientSession );
+			g_sessionList.push_back( clientSession );
 		}
 
 	}
@@ -365,12 +373,12 @@ int main( void )
 		Sleep( 100 );
 	}
 
-	for ( int i = 0; i < m_sessionList.size(); ++i )
+	for ( int i = 0; i < g_sessionList.size(); ++i )
 	{
-		if ( m_sessionList[i] )
+		if ( g_sessionList[i] )
 		{
-			shutdown( m_sessionList[i]->m_Socket, SD_BOTH );
-			closesocket( m_sessionList[i]->m_Socket );
+			shutdown( g_sessionList[i]->m_Socket, SD_BOTH );
+			closesocket( g_sessionList[i]->m_Socket );
 		}
 	}
 
@@ -383,8 +391,8 @@ int main( void )
 	UINT64 recvDataByte = 0;
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
-		recvDataByte += m_sessionList[i]->m_TotalRecvSize;
-		sendDataByte += m_sessionList[i]->m_TotalSendSize;
+		recvDataByte += g_sessionList[i]->m_TotalRecvSize;
+		sendDataByte += g_sessionList[i]->m_TotalSendSize;
 	}
 
 	printf_s( "Real Send Data : %d \n", sendDataByte );
@@ -392,10 +400,10 @@ int main( void )
 
 	for ( int i = 0; i < MAX_CONNECTION; ++i )
 	{
-		deleteClientSession( m_sessionList[i] );
+		deleteClientSession( g_sessionList[i] );
 	}
 
-	m_sessionList.clear();
+	g_sessionList.clear();
 	WSACleanup();
 
 	getchar();
