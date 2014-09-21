@@ -207,6 +207,12 @@ void ClientSession::PacketHandler()
 		MyPacket::LoginResult loginResult;
 		loginResult.set_playerid( message.playerid() );
 
+		mPlayer.mPlayerId = message.playerid();
+
+		// test position
+		mPlayer.SetPosition( 1.0 * message.playerid(), 1.0 * message.playerid() );
+		mPlayer.SetZone();
+
 		// test name
 		char* name = "kim";
 		loginResult.set_playername( name );
@@ -214,9 +220,9 @@ void ClientSession::PacketHandler()
 		// message 안에 message 쓰는 방법
 		// mutable로 멤버변수를 불러온다 -> set 으로 값을 정해준다
 		// 일반 함수인 .멤버변수() 얘는 읽기 전용이라 const로 리턴된다. 그럼 당연히 값을 못쓰겠죠잉
-		loginResult.mutable_playerpos()->set_x( 1.0 * message.playerid() );
-		loginResult.mutable_playerpos()->set_y( 1.0 * message.playerid() );
-		loginResult.mutable_playerpos()->set_z( 1.0 * message.playerid() );
+		loginResult.mutable_playerpos()->set_x( mPlayer.mPosX );
+		loginResult.mutable_playerpos()->set_y( mPlayer.mPosY );
+		loginResult.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
 		ProtobufSendbufferRecreate();
 

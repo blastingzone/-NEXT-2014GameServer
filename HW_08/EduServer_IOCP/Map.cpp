@@ -74,7 +74,14 @@ void Zone::PushPlayer(PlayerPtr player)
 	FastSpinlockGuard criticalSection(mZoneLock);
 	
 	//있을 경우 덮어쓰고 없을 경우 생성
-	mPlayerMap[player->GetPlayerId()] = player;
+	if ( player == mPlayerMap.find( player->GetPlayerId() )->second )
+	{
+
+	}
+	else
+	{
+		mPlayerMap.insert( make_pair(player->GetPlayerId(), player) );
+	}
 }
 
 PlayerPtr Zone::PopPlayer(int playerID)

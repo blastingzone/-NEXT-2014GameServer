@@ -20,7 +20,6 @@ struct MessageHeader
 
 const int MessageHeaderSize = sizeof( MessageHeader );
 
-
 class ClientSession : public Session, public ObjectPool < ClientSession >
 {
 public:

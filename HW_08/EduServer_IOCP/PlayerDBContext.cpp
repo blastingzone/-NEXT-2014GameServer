@@ -92,7 +92,7 @@ void LoadPlayerDataContext::OnSuccess()
 	mSessionObject->mPlayer.ResponseLoad( mPlayerId, mPosX, mPosY, mPosZ, mIsValid, mPlayerName, mComment );
 
 	//강제 에러
-	CRASH_ASSERT( false );
+	//CRASH_ASSERT( false );
 }
 
 void LoadPlayerDataContext::OnFail()
