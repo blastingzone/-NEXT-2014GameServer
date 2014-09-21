@@ -13,7 +13,7 @@
 
 #define MAX_CONNECTION 20
 #define TOTAL_MESSAGE_BYTE 20000
-#define MAX_BUFFER_SIZE 2048
+#define MAX_BUFFER_SIZE 4096
 #define TIMEOUT_MILLISECOND 40000
 
 #define SERVER_PORT 9000
@@ -102,12 +102,17 @@ void WriteMessageToStream(
 }
 
 
-void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
+void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Client_Session* clientSession )
 {
 	MessageHeader messageHeader;
 
 	while ( codedInputStream.ReadRaw( &messageHeader, MessageHeaderSize ) )
 	{
+		if ( clientSession == NULL )
+		{
+			printf_s( "NULL 이네요\n" );
+		}
+
 		const void* pPacket = NULL;
 		int remainSize = 0;
 		bool IsOK = false;
@@ -116,7 +121,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 		if ( IsOK == false )
 		{
 			printf_s( "Get Direct Buffer Pointer FAILED!! \n" );
-			codedInputStream.ConsumedEntireMessage();
+			
 			break;
 		}
 
@@ -139,27 +144,37 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 			
+			codedInputStream.ConsumedEntireMessage();
+
 			printf( "Login Success ! Player Id : %d \n", message.playerid() );
 			printf( "Player Name : %s \n", message.playername() );
 			printf( "Player Position : %f, %f, %f \n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z() );
 
+			printf_s( "session id : %d \n", clientSession->m_SessionId );
+
 			// 로그인 성공하면 채팅을 보내기 시작
 			// 주의 : 이 부분 잘 안돌아간다! 멀티스레드에서 하면 안 되는 것 같다
-			Client_Session* clientSession = g_sessionList[message.playerid()];
+			//Client_Session* clientSession = g_sessionList[message.playerid()];
 
 			MyPacket::ChatRequest chatPacket;
 			std::string chat( "chatting!" );
-			chat.append( "아이디는 %d", clientSession->m_SessionId );
+			chat.append( "session id : " );
+			chat.append( std::to_string(clientSession->m_SessionId) );
 
 			printf( "Chat Data : %s \n", chat.c_str() );
 
 			chatPacket.set_playerid( clientSession->m_SessionId );
 			chatPacket.set_playermessage(chat.c_str());
 
+			printf_s( "output buffer count : %d \n", ( clientSession->m_pOutputCodedStream )->ByteCount() );
+
 			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *(clientSession->m_pOutputCodedStream) );
 
+			//test call
+			printf_s("output buffer count : %d \n" ,(clientSession->m_pOutputCodedStream)->ByteCount());
+
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
-			clientSession->m_WsaSendBuf.len = MAX_BUFFER_SIZE;
+			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
 
 			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
 			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
@@ -179,7 +194,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 				printf_s( " Chat Data Send OK \n" );
 			}
 
-
 			break;
 		}
 			//서버에 only 에코 기능만 있을 때 테스트용
@@ -188,6 +202,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 			MyPacket::LoginRequest message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
+
+			codedInputStream.ConsumedEntireMessage();
+
 			printf("Player Id : %d \n", message.playerid());
 			break;
 		}
@@ -196,6 +213,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 			MyPacket::ChatResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
+
+			codedInputStream.ConsumedEntireMessage();
+
 			break;
 		}
 		case MyPacket::MessageType::PKT_SC_MOVE:
@@ -203,6 +223,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 			MyPacket::MoveResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
+
+			codedInputStream.ConsumedEntireMessage();
+
 			break;
 		}
 		}
@@ -213,18 +236,14 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream )
 
 static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 {
-	HANDLE hCompletionPort = (HANDLE)lpParameter;
-	DWORD dwByteRecv = 0;
-	ULONG completionKey = 0;
-	Client_Session* clientSession = nullptr;
-
 	while ( true )
 	{
-		dwByteRecv = 0;
-		completionKey = 0;
-		clientSession = nullptr;
+		HANDLE hCompletionPort = (HANDLE)lpParameter;
+		DWORD dwByteRecv = 0;
+		ULONG completionKey = 0;
+		LPOVERLAPPED overlapped = nullptr;
 
-		int ret = GetQueuedCompletionStatus( hCompletionPort, &dwByteRecv, (PULONG_PTR)&completionKey, (LPOVERLAPPED*)&clientSession, IOCP_WAIT_TIME );
+		int ret = GetQueuedCompletionStatus( hCompletionPort, &dwByteRecv, (PULONG_PTR)&completionKey, &overlapped, IOCP_WAIT_TIME );
 
 		if ( ret == 0 || dwByteRecv == 0 )
 		{
@@ -239,11 +258,13 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 		}
 		else
 		{
-			clientSession->m_Flag = 0;
-			if ( !WSARecv( clientSession->m_Socket, &( clientSession->m_WsaRecvBuf ), 1, &dwByteRecv, &clientSession->m_Flag, (LPWSAOVERLAPPED)( clientSession ), NULL ) )
+			Client_Session* session = reinterpret_cast<Client_Session*>( overlapped );
+			session->m_Flag = 0;
+
+			if ( !WSARecv( session->m_Socket, &( session->m_WsaRecvBuf ), 1, &dwByteRecv, &session->m_Flag, (LPWSAOVERLAPPED)( session ), NULL ) )
 			{
-				PacketHandler( *(clientSession->m_pInputCodedStream) );
-				clientSession->m_TotalRecvSize += dwByteRecv;
+				PacketHandler( *( session->m_pInputCodedStream ), session );
+				session->m_TotalRecvSize += dwByteRecv;
 
 				continue;
 			}
@@ -333,13 +354,13 @@ int main( void )
 // 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
 
 		clientSession->m_WsaSendBuf.buf = (CHAR*)(clientSession->m_SendBuffer);
-		clientSession->m_WsaSendBuf.len = MAX_BUFFER_SIZE;
+		clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
 
 		clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
 		clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
 		DWORD sendByte = 0;
 
-		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPOVERLAPPED)clientSession, NULL ) )
 		{
 			if ( WSAGetLastError() != WSA_IO_PENDING )
 			{
