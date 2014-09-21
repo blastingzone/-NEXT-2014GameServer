@@ -101,6 +101,15 @@ void WriteMessageToStream(
 	message.SerializeToCodedStream( &stream );
 }
 
+void InitSendBufferOnly( Client_Session* clientSession )
+{
+	delete clientSession->m_pOutputCodedStream;
+	delete clientSession->m_pOutputArrayStream;
+
+	clientSession->m_pOutputArrayStream = new google::protobuf::io::ArrayOutputStream( clientSession->m_SendBuffer, MAX_BUFFER_SIZE );
+	clientSession->m_pOutputCodedStream = new google::protobuf::io::CodedOutputStream( clientSession->m_pOutputArrayStream );
+}
+
 
 void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Client_Session* clientSession )
 {
@@ -120,8 +129,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 
 		if ( IsOK == false )
 		{
-			printf_s( "Get Direct Buffer Pointer FAILED!! \n" );
-			
 			break;
 		}
 
@@ -166,12 +173,15 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			chatPacket.set_playerid( clientSession->m_SessionId );
 			chatPacket.set_playermessage(chat.c_str());
 
-			printf_s( "output buffer count : %d \n", ( clientSession->m_pOutputCodedStream )->ByteCount() );
+			// 주의 : 본래 여기서 send buffer를 비우면 안 된다.
+			// recv 로직 중에 send 버퍼를 비워버리면 실제 send가 비동기로 잘 돌아가는 도중에 먹는거 뺏아가는 수가 있음;;
+			// but 이 클라이언트는 하는 일이 간단해서 통제가 가능하다. 여기로 들어왔다는건 send가 끝났다는 게 보장된다.
+			InitSendBufferOnly( clientSession );
 
 			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *(clientSession->m_pOutputCodedStream) );
 
 			//test call
-			printf_s("output buffer count : %d \n" ,(clientSession->m_pOutputCodedStream)->ByteCount());
+			printf_s("output buffer count after write: %d \n" ,(clientSession->m_pOutputCodedStream)->ByteCount());
 
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
@@ -215,6 +225,8 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				break;
 
 			codedInputStream.ConsumedEntireMessage();
+
+			printf_s( "[CHAT] [%s] : %s \n", message.playername(), message.playermessage() );
 
 			break;
 		}
@@ -402,7 +414,6 @@ int main( void )
 			closesocket( g_sessionList[i]->m_Socket );
 		}
 	}
-
 
 	printf_s( "Time Passed : %f \n", g_StartTimer / 1000.f );
 	printf_s( "Send Data : %d (maybe...) \n", TOTAL_MESSAGE_BYTE );
