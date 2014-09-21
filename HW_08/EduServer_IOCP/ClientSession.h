@@ -21,7 +21,6 @@ struct MessageHeader
 const int MessageHeaderSize = sizeof( MessageHeader );
 
 
-
 class ClientSession : public Session, public ObjectPool < ClientSession >
 {
 public:
@@ -40,6 +39,8 @@ public:
 	virtual void OnRelease();
 
 	void PacketHandler();
+
+	//이 함수는 여기 있으면 안될 것 같은데
 	void WriteMessageToStream(
 		MyPacket::MessageType msgType,
 		const google::protobuf::MessageLite& message,

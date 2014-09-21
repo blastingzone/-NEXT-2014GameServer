@@ -65,11 +65,11 @@ public:
 	void		PushPlayer(PlayerPtr player);
 	PlayerPtr	PopPlayer(int playerID);
 
+	PlayerInZoneLIST mPlayerList;
+
 private:
 
 	ZonePtr mNeighbor[NEIGHBOR_MAX];
 	float	mConner[4][2];
-
-	PlayerInZoneLIST mPlayerList;
 };
 

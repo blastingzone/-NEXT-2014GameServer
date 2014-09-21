@@ -8,6 +8,7 @@
 #include "ClientSessionManager.h"
 #include "Player.h"
 #include "MyPacket.pb.h"
+#include "Map.h"
 
 #define CLIENT_BUFSIZE	65536
 
@@ -230,6 +231,22 @@ void ClientSession::PacketHandler()
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
 
+		std::string chat = message.playermessage();
+		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
+
+		for (auto iter : zone->mPlayerList)
+		{
+			PlayerPtr player();
+
+			MyPacket::ChatRequest chatPacket;
+			chat.append("아이디는 %d", mPlayer.GetPlayerId());
+
+			chatPacket.set_playerid(mPlayer.GetPlayerId());
+			chatPacket.set_playermessage(chat.c_str());
+
+			//WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, );
+		}
+		
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_MOVE:
@@ -237,6 +254,8 @@ void ClientSession::PacketHandler()
 		MyPacket::MoveRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
+
+		mPlayer.RequestUpdatePosition(message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
 		break;
 	}
 	}
