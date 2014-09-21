@@ -3,7 +3,11 @@
 
 Crypt::Crypt()
 {
+	mP.cbData = DHKEYSIZE / 8;
+	mP.pbData = (BYTE*)(GRgbPrime);
 
+	mG.cbData = DHKEYSIZE / 8;
+	mG.pbData = (BYTE*)(GRgbGenerator);
 }
 
 Crypt::~Crypt()
@@ -34,7 +38,7 @@ void Crypt::CreatePrivateKey()
 	if (!CryptSetKeyParam(
 		mProvParty,
 		KP_P,
-		(PBYTE)&P,
+		(PBYTE)&mP,
 		0))
 		Release();
 
@@ -42,7 +46,7 @@ void Crypt::CreatePrivateKey()
 	if (!CryptSetKeyParam(
 		mProvParty,
 		KP_G,
-		(PBYTE)&G,
+		(PBYTE)&mG,
 		0))
 		Release();
 
@@ -57,9 +61,6 @@ void Crypt::CreatePrivateKey()
 
 void Crypt::ExportPublicKey()
 {
-	// Public key value, (G^X) mod P is calculated.
-	DWORD dwDataLen;
-
 	// key BLOB의 크기를 받아옴
 	if (!CryptExportKey(
 		mPrivateKey,
@@ -67,11 +68,11 @@ void Crypt::ExportPublicKey()
 		PUBLICKEYBLOB,
 		0,
 		NULL,
-		&dwDataLen))
+		&mDataLen))
 		Release();
 
 	// key BLOB를 위한 메모리 할당
-	if (!(mKeyBlob = (PBYTE)malloc(dwDataLen)))
+	if (!(mKeyBlob = (PBYTE)malloc(mDataLen)))
 		Release();
 
 	// key BLOB를 얻음
@@ -81,19 +82,19 @@ void Crypt::ExportPublicKey()
 		PUBLICKEYBLOB,
 		0,
 		mKeyBlob,
-		&dwDataLen))
+		&mDataLen))
 		Release();
 }
 
-void Crypt::ImportPublicKey()
+void Crypt::ImportPublicKey(PBYTE remoteKeyBlob, DWORD remoteDataLen)
 {
 	if (!CryptImportKey(
 		mProvParty,
-		pbKeyBlob2,
-		dwDataLen2,
+		remoteKeyBlob,
+		remoteDataLen,
 		mPrivateKey,
 		0,
-		&hSessionKey2))
+		&mSessionKey))
 		Release();
 }
 
@@ -104,7 +105,7 @@ void Crypt::ConvertRC4()
 	// Enable the party 1 public session key for use by setting the 
 	// ALGID.
 	if (!CryptSetKeyParam(
-		hSessionKey1,
+		mSessionKey,
 		KP_ALGID,
 		(PBYTE)&Algid,
 		0))
@@ -112,49 +113,30 @@ void Crypt::ConvertRC4()
 
 }
 
-bool Crypt::RC4Encyrpt()
+bool Crypt::RC4Encyrpt(PBYTE data, DWORD length)
 {
 	// Get the size.
-	DWORD dwLength = sizeof(g_rgbData);
+	DWORD dwLength = length;
 	if(!CryptEncrypt(
-		hSessionKey1,
+		mSessionKey,
 		0,
 		TRUE,
 		0,
-		NULL,
+		data,
 		&dwLength,
-		sizeof(g_rgbData)))
+		length))
 	Release();
-
-	// 암호화될 데이터를 위한 버퍼 할당
-	pbData = (PBYTE)malloc(dwLength);
-	if (!pbData)
-		Release();
-
-	memcpy(pbData, g_rgbData, sizeof(g_rgbData));
-
-	// 데이터를 암호화
-	dwLength = sizeof(g_rgbData);
-	if (!CryptEncrypt(
-		hSessionKey1,
-		0,
-		TRUE,
-		0,
-		pbData,
-		&dwLength,
-		sizeof(g_rgbData)))
-		Release();
 }
 
-bool Crypt::RC4Decrypt()
+bool Crypt::RC4Decrypt(PBYTE data, DWORD length)
 {
-	dwLength = sizeof(g_rgbData);
+	DWORD dwLength = length;
 	if (!CryptDecrypt(
-		hSessionKey2,
+		mSessionKey,
 		0,
 		TRUE,
 		0,
-		pbData,
+		data,
 		&dwLength))
 		Release();
 }

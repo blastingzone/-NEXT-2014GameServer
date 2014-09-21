@@ -1,3 +1,5 @@
+#pragma once
+
 #include <tchar.h>
 #include <windows.h>
 #include <wincrypt.h>
@@ -6,7 +8,7 @@
 #define DHKEYSIZE 512
 
 // Prime in little-endian format.
-static const BYTE g_rgbPrime[] =
+static const BYTE GRgbPrime[] =
 {
 	0x91, 0x02, 0xc8, 0x31, 0xee, 0x36, 0x07, 0xec,
 	0xc2, 0x24, 0x37, 0xf8, 0xfb, 0x3d, 0x69, 0x49,
@@ -19,7 +21,7 @@ static const BYTE g_rgbPrime[] =
 };
 
 // Generator in little-endian format.
-static BYTE g_rgbGenerator[] =
+static BYTE GRgbGenerator[] =
 {
 	0x02, 0x88, 0xd7, 0xe6, 0x53, 0xaf, 0x72, 0xc5,
 	0x8c, 0x08, 0x4b, 0x46, 0x6f, 0x9f, 0x2e, 0xc4,
@@ -31,52 +33,6 @@ static BYTE g_rgbGenerator[] =
 	0x13, 0x0a, 0xea, 0x39, 0x78, 0x02, 0x6d, 0x62
 };
 
-BYTE g_rgbData[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
-
-int _tmain(int argc, _TCHAR* argv[])
-{
-	UNREFERENCED_PARAMETER(argc);
-	UNREFERENCED_PARAMETER(argv);
-
-	BOOL fReturn;
-	HCRYPTPROV hProvParty1 = NULL;
-	HCRYPTPROV hProvParty2 = NULL;
-	DATA_BLOB P;
-	DATA_BLOB G;
-	HCRYPTKEY hPrivateKey1 = NULL;
-	HCRYPTKEY hPrivateKey2 = NULL;
-	PBYTE pbKeyBlob1 = NULL;
-	PBYTE pbKeyBlob2 = NULL;
-	HCRYPTKEY hSessionKey1 = NULL;
-	HCRYPTKEY hSessionKey2 = NULL;
-	PBYTE pbData = NULL;
-
-	/************************
-	Construct data BLOBs for the prime and generator. The P and G
-	values, represented by the g_rgbPrime and g_rgbGenerator arrays
-	respectively, are shared values that have been agreed to by both
-	parties.
-	************************/
-	P.cbData = DHKEYSIZE / 8;
-	P.pbData = (BYTE*)(g_rgbPrime);
-
-	G.cbData = DHKEYSIZE / 8;
-	G.pbData = (BYTE*)(g_rgbGenerator);
-
-
-
-
-
-
-
-ErrorExit:
-
-
-	return 0;
-}
-
-
-
 class Crypt
 {
 public:
@@ -85,11 +41,12 @@ public:
 
 	void CreatePrivateKey();
 	void ExportPublicKey();
-	void ImportPublicKey();
+	//원격지의 공개키를 이용해서 sessionkey계산
+	void ImportPublicKey(PBYTE remoteKeyBlob, DWORD remoteDataLen);
 	void ConvertRC4();
 
-	bool RC4Encyrpt();
-	bool RC4Decrypt();
+	bool RC4Encyrpt(PBYTE data, DWORD length);
+	bool RC4Decrypt(PBYTE data, DWORD length);
 
 	void Release();
 
@@ -100,7 +57,11 @@ private:
 
 	HCRYPTPROV	mProvParty = NULL;
 	HCRYPTKEY	mPrivateKey = NULL;
+
+	// Public key value, (G^X) mod P is calculated.
+	DWORD		mDataLen;
 	PBYTE		mKeyBlob = NULL;
+
 	HCRYPTKEY	mSessionKey = NULL;
 
 	//PBYTE pbData = NULL;

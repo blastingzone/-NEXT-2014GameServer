@@ -60,10 +60,10 @@ public:
 private:
 
 	SOCKADDR_IN		mClientAddr;
-	google::protobuf::io::ArrayOutputStream* m_pArrayOutputStream = nullptr;
-	google::protobuf::io::CodedOutputStream* m_pCodedOutputStream = nullptr;
+	google::protobuf::io::ArrayOutputStream* mArrayOutputStream = nullptr;
+	google::protobuf::io::CodedOutputStream* mCodedOutputStream = nullptr;
 
-	google::protobuf::uint8 m_SessionBuffer[MAX_BUFFER_SIZE];
+	google::protobuf::uint8 mSessionBuffer[MAX_BUFFER_SIZE];
 
 	friend class ClientSessionManager;
 };

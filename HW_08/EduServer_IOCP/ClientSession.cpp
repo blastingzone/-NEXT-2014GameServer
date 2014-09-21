@@ -213,11 +213,11 @@ void ClientSession::PacketHandler()
 		loginResult.mutable_playerpos()->set_y( 1.0 * message.playerid() );
 		loginResult.mutable_playerpos()->set_z( 1.0 * message.playerid() );
 
-		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *m_pCodedOutputStream );
+		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *mCodedOutputStream );
 
 		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
 		// 하하 그런건 없었습니다! ㅠㅠ
-		if ( false == PostSend( (const char*)m_SessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
+		if ( false == PostSend( (const char*)mSessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
 			break;
 
 		break;
@@ -240,10 +240,10 @@ void ClientSession::PacketHandler()
 			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
 
-			WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *m_pCodedOutputStream);
+			WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *mCodedOutputStream);
 
 			//플레이어 리스트에 있는 세션을 이용하여 send
-			if (false == iter->mSession->PostSend((const char*)m_SessionBuffer, chatPacket.ByteSize() + MessageHeaderSize))
+			if (false == iter->mSession->PostSend((const char*)mSessionBuffer, chatPacket.ByteSize() + MessageHeaderSize))
 				break;
 		}
 		break;
@@ -264,9 +264,9 @@ void ClientSession::PacketHandler()
 		movePacket.mutable_playerpos()->set_y(message.playerpos().y());
 		movePacket.mutable_playerpos()->set_z(message.playerpos().z());
 
-		WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, movePacket, *m_pCodedOutputStream);
+		WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, movePacket, *mCodedOutputStream);
 
-		if (false == PostSend((const char*)m_SessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
+		if (false == PostSend((const char*)mSessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
 			break;
 
 		break;
@@ -278,20 +278,20 @@ void ClientSession::PacketHandler()
 
 void ClientSession::ProtobufInit()
 {
-	m_pArrayOutputStream = new google::protobuf::io::ArrayOutputStream(m_SessionBuffer, MAX_BUFFER_SIZE);
-	m_pCodedOutputStream = new google::protobuf::io::CodedOutputStream( m_pArrayOutputStream );
+	mArrayOutputStream = new google::protobuf::io::ArrayOutputStream(mSessionBuffer, MAX_BUFFER_SIZE);
+	mCodedOutputStream = new google::protobuf::io::CodedOutputStream( mArrayOutputStream );
 }
 
 void ClientSession::ProtobufReleae()
 {
-	if ( m_pCodedOutputStream )
+	if ( mCodedOutputStream )
 	{
-		delete m_pCodedOutputStream;
+		delete mCodedOutputStream;
 	}
 		
-	if ( m_pArrayOutputStream )
+	if ( mArrayOutputStream )
 	{
-		delete m_pArrayOutputStream;
+		delete mArrayOutputStream;
 	}
 
 }
