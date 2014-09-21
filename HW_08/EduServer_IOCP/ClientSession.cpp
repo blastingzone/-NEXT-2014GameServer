@@ -183,7 +183,6 @@ void ClientSession::PacketHandler()
 	mRecvBuffer.Remove( MessageHeaderSize );
 
 	const void* pPacket = mRecvBuffer.GetBufferStart();
-	int remainSize = 0;
 
 	google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
 	google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
@@ -249,8 +248,9 @@ void ClientSession::PacketHandler()
 		for (auto iter : playerList)
 		{
 			MyPacket::ChatResult chatPacket;
-			chat.append( "server to client : your id : " );
+			chat.append( "server to client : char from id : " );
 			chat.append( std::to_string( mPlayer.GetPlayerId() ) );
+			chat.append( "\n" );
 			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
 			chatPacket.set_playername( "kim" ); //모조리 김씨
@@ -284,7 +284,7 @@ void ClientSession::PacketHandler()
 
 		ProtobufSendbufferRecreate();
 
-		WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, movePacket, *mCodedOutputStream);
+		WriteMessageToStream(MyPacket::MessageType::PKT_SC_MOVE, movePacket, *mCodedOutputStream);
 
 		if (false == PostSend((const char*)mSessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
 			break;
