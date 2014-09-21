@@ -153,6 +153,7 @@
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="ClientSessionManager.h" />
     <ClInclude Include="ContentsConfig.h" />
+    <ClInclude Include="CryptPacket.h" />
     <ClInclude Include="DBContext.h" />
     <ClInclude Include="DBHelper.h" />
     <ClInclude Include="DBManager.h" />

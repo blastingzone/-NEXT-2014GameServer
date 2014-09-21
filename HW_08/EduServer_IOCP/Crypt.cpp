@@ -68,11 +68,11 @@ void Crypt::ExportPublicKey()
 		PUBLICKEYBLOB,
 		0,
 		NULL,
-		&mDataLen))
+		&mKeyBlobLen))
 		Release();
 
 	// key BLOB를 위한 메모리 할당
-	if (!(mKeyBlob = (PBYTE)malloc(mDataLen)))
+	if (!(mKeyBlob = (PBYTE)malloc(mKeyBlobLen)))
 		Release();
 
 	// key BLOB를 얻음
@@ -82,7 +82,7 @@ void Crypt::ExportPublicKey()
 		PUBLICKEYBLOB,
 		0,
 		mKeyBlob,
-		&mDataLen))
+		&mKeyBlobLen))
 		Release();
 }
 
@@ -113,7 +113,7 @@ void Crypt::ConvertRC4()
 
 }
 
-bool Crypt::RC4Encyrpt(PBYTE data, DWORD length)
+void Crypt::RC4Encyrpt(PBYTE data, DWORD length)
 {
 	// Get the size.
 	DWORD dwLength = length;
@@ -128,7 +128,7 @@ bool Crypt::RC4Encyrpt(PBYTE data, DWORD length)
 	Release();
 }
 
-bool Crypt::RC4Decrypt(PBYTE data, DWORD length)
+void Crypt::RC4Decrypt(PBYTE data, DWORD length)
 {
 	DWORD dwLength = length;
 	if (!CryptDecrypt(

@@ -137,6 +137,9 @@
     <ClInclude Include="Crypt.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="CryptPacket.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -45,10 +45,13 @@ public:
 	void ImportPublicKey(PBYTE remoteKeyBlob, DWORD remoteDataLen);
 	void ConvertRC4();
 
-	bool RC4Encyrpt(PBYTE data, DWORD length);
-	bool RC4Decrypt(PBYTE data, DWORD length);
+	void RC4Encyrpt(PBYTE data, DWORD length);
+	void RC4Decrypt(PBYTE data, DWORD length);
 
 	void Release();
+
+	DWORD GetDataLen() const { return mKeyBlobLen; }
+	PBYTE GetKeyBlob() const { return mKeyBlob; }
 
 private:
 
@@ -59,10 +62,8 @@ private:
 	HCRYPTKEY	mPrivateKey = NULL;
 
 	// Public key value, (G^X) mod P is calculated.
-	DWORD		mDataLen;
+	DWORD		mKeyBlobLen = 0;
 	PBYTE		mKeyBlob = NULL;
-
+	
 	HCRYPTKEY	mSessionKey = NULL;
-
-	//PBYTE pbData = NULL;
 };
