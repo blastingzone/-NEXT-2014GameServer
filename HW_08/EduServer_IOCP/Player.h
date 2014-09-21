@@ -19,6 +19,7 @@ public:
 
 	//자신의 위치를 이용해서 존을 설정
 	void SetZone();
+	void SetPosition( float x, float z );
 
 	void OnTick(); ///< 로그인후 1초마다 불리는 기능
 

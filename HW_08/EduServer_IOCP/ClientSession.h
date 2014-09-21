@@ -6,7 +6,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/text_format.h>
 
-#define MAX_BUFFER_SIZE 2048
+#define MAX_BUFFER_SIZE 4096
 
 class ClientSessionManager;
 
@@ -30,7 +30,8 @@ public:
 	void SessionReset();
 
 	void ProtobufInit();
-	void ProtobufReleae();
+	void ProtobufSendbufferRecreate();
+	void ProtobufRelease();
 
 	bool PostAccept();
 	void AcceptCompletion();

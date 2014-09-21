@@ -36,6 +36,7 @@ void Player::PlayerReset()
 	mPlayerId = -1;
 	mHeartBeat = -1;
 	mIsAlive = false;
+
 }
 
 void Player::Start(int heartbeat)
@@ -48,7 +49,6 @@ void Player::Start(int heartbeat)
 
 	/// 생명 불어넣기 ㄱㄱ
 	//OnTick();
-
 }
 
 void Player::OnTick()
@@ -103,6 +103,9 @@ void Player::DecayTickBuff()
 
 void Player::RequestLoad(int pid)
 {
+	//test create player
+	TestCreatePlayerData( L"kim" );
+
 	LoadPlayerDataContext* context = new LoadPlayerDataContext(mSession, pid);
 	GDatabaseManager->PostDatabsaseRequest(context);
 }
@@ -169,14 +172,12 @@ void Player::ResponseUpdateValidation(bool isValid)
 	mIsValid = isValid;
 }
 
-
 void Player::TestCreatePlayerData(const wchar_t* newName)
 {
 	//todo: DB스레드풀에 newName에 해당하는 플레이어 생성 작업을 수행시켜보기
 	CreatePlayerDataContext* context = new CreatePlayerDataContext(mSession, newName);
 
 	GDatabaseManager->PostDatabsaseRequest(context);
-
 }
 
 void Player::ResponseCreatePlayerData(const wchar_t* generatedName)
@@ -212,4 +213,11 @@ void Player::SetZone()
 		//새로운 존에 추가
 		mZone->PushPlayer(GetSharedFromThis<Player>());
 	}
+}
+
+void Player::SetPosition( float x, float z )
+{
+	mPosX = x;
+	mPosY = 0.0f;
+	mPosZ = z;
 }

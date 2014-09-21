@@ -35,7 +35,7 @@ void ClientSession::SessionReset()
 	mSendBuffer.BufferReset();
 	mSendBufferLock.LeaveWriteLock();
 
-	ProtobufReleae();
+	ProtobufRelease();
 	ProtobufInit();
 
 	LINGER lingerOption;
@@ -170,7 +170,7 @@ void ClientSession::OnRelease()
 	TRACE_THIS;
 
 	GClientSessionManager->ReturnClientSession(this);
-	ProtobufReleae();
+	ProtobufRelease();
 }
 
 
@@ -195,11 +195,16 @@ void ClientSession::PacketHandler()
 		MyPacket::LoginRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
-		printf( "Player Id : %d \n", message.playerid() );
+
+		payloadInputStream.ConsumedEntireMessage();
+
+		printf( "Login Request! Player Id : %d \n", message.playerid() );
 
 		// 이제 db 에서 저 플레이어의 이름을 받아와서 LoginResult에 채운 다음 보내줘야 함
-		MyPacket::LoginResult loginResult;
 
+		//mPlayer.RequestLoad( message.playerid() );
+		
+		MyPacket::LoginResult loginResult;
 		loginResult.set_playerid( message.playerid() );
 
 		// test name
@@ -212,6 +217,8 @@ void ClientSession::PacketHandler()
 		loginResult.mutable_playerpos()->set_x( 1.0 * message.playerid() );
 		loginResult.mutable_playerpos()->set_y( 1.0 * message.playerid() );
 		loginResult.mutable_playerpos()->set_z( 1.0 * message.playerid() );
+
+		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *mCodedOutputStream );
 
@@ -236,11 +243,13 @@ void ClientSession::PacketHandler()
 		for (auto iter : playerList)
 		{
 			MyPacket::ChatResult chatPacket;
-			chat = "서버: 니놈의 아이디는" + mPlayer.GetPlayerId() + chat;
+			chat = "server to client : your id : " + mPlayer.GetPlayerId() + chat;
 			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
 
-			WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *mCodedOutputStream);
+			ProtobufSendbufferRecreate();
+
+			WriteMessageToStream(MyPacket::MessageType::PKT_SC_CHAT, chatPacket, *mCodedOutputStream);
 
 			//플레이어 리스트에 있는 세션을 이용하여 send
 			if (false == iter->mSession->PostSend((const char*)mSessionBuffer, chatPacket.ByteSize() + MessageHeaderSize))
@@ -254,8 +263,9 @@ void ClientSession::PacketHandler()
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
 
-		mPlayer.RequestUpdatePosition(message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
-
+		//mPlayer.RequestUpdatePosition(message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
+		mPlayer.SetPosition( message.playerpos().x(), message.playerpos().z() );
+		mPlayer.SetZone();
 		//이동처리가 완료됨을 알리는 페킷
 		MyPacket::MoveResult movePacket;
 
@@ -263,6 +273,8 @@ void ClientSession::PacketHandler()
 		movePacket.mutable_playerpos()->set_x(message.playerpos().x());
 		movePacket.mutable_playerpos()->set_y(message.playerpos().y());
 		movePacket.mutable_playerpos()->set_z(message.playerpos().z());
+
+		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, movePacket, *mCodedOutputStream);
 
@@ -282,17 +294,23 @@ void ClientSession::ProtobufInit()
 	mCodedOutputStream = new google::protobuf::io::CodedOutputStream( mArrayOutputStream );
 }
 
-void ClientSession::ProtobufReleae()
+void ClientSession::ProtobufSendbufferRecreate()
+{
+	ProtobufRelease();
+	ProtobufInit();
+}
+
+void ClientSession::ProtobufRelease()
 {
 	if ( mCodedOutputStream )
 	{
 		delete mCodedOutputStream;
+		mCodedOutputStream = nullptr;
 	}
-		
+
 	if ( mArrayOutputStream )
 	{
 		delete mArrayOutputStream;
+		mArrayOutputStream = nullptr;
 	}
-
 }
-

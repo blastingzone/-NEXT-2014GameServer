@@ -49,6 +49,7 @@ void IOThread::DoIocpJob()
 		//todo: DB 처리 결과가 담겨오는 경우 처리
 		DatabaseJobContext* dbContext = reinterpret_cast<DatabaseJobContext*>(overlapped);
 
+		return;
 	}
 
 	/// 아래로는 일반적인 I/O 처리
