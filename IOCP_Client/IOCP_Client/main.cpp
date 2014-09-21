@@ -8,10 +8,11 @@
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/text_format.h"
 #include <string>
+#include "CircularBuffer.h"
 
 #pragma comment(lib, "ws2_32.lib") 
 
-#define MAX_CONNECTION 20
+#define MAX_CONNECTION 1000
 #define TOTAL_MESSAGE_BYTE 20000
 #define MAX_BUFFER_SIZE 4096
 #define TIMEOUT_MILLISECOND 40000
@@ -33,8 +34,10 @@ typedef struct
 	WSABUF m_WsaRecvBuf;
 	//char m_RecvBuffer[MAX_BUFFER_SIZE];
 	//char m_SendBuffer[MAX_BUFFER_SIZE];
+	CircularBuffer*	mRecvBuffer;
 	google::protobuf::uint8 m_SendBuffer[MAX_BUFFER_SIZE];
-	google::protobuf::uint8 m_RecvBuffer[MAX_BUFFER_SIZE];
+	//google::protobuf::uint8 m_RecvBuffer[MAX_BUFFER_SIZE];
+	
 	DWORD m_Flag;
 	int m_SessionId;
 
@@ -46,8 +49,6 @@ typedef struct
 	google::protobuf::io::ArrayOutputStream* m_pOutputArrayStream;
 	google::protobuf::io::CodedOutputStream* m_pOutputCodedStream;
 
-	google::protobuf::io::ArrayInputStream* m_pInputArrayStream;
-	google::protobuf::io::CodedInputStream* m_pInputCodedStream;
 } Client_Session;
 
 std::vector<Client_Session*> g_sessionList;
@@ -56,18 +57,18 @@ void deleteClientSession( Client_Session* session )
 {
 
 	closesocket( session->m_Socket );
-
-	if ( session->m_pInputCodedStream )
-	{
-		delete session->m_pInputCodedStream;
-		session->m_pInputCodedStream = nullptr;
-	}
-
-	if ( session->m_pInputArrayStream )
-	{
-		delete session->m_pInputArrayStream;
-		session->m_pInputArrayStream = nullptr;
-	}
+// 
+// 	if ( session->m_pInputCodedStream )
+// 	{
+// 		delete session->m_pInputCodedStream;
+// 		session->m_pInputCodedStream = nullptr;
+// 	}
+// 
+// 	if ( session->m_pInputArrayStream )
+// 	{
+// 		delete session->m_pInputArrayStream;
+// 		session->m_pInputArrayStream = nullptr;
+// 	}
 
 	if ( session->m_pOutputCodedStream )
 	{
@@ -80,6 +81,8 @@ void deleteClientSession( Client_Session* session )
 		delete session->m_pOutputArrayStream;
 		session->m_pOutputArrayStream = nullptr;
 	}
+
+	delete session->mRecvBuffer;
 
 	delete session;
 	session = nullptr;
@@ -120,37 +123,40 @@ void InitSendBufferOnly( Client_Session* clientSession )
 }
 
 
-void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Client_Session* clientSession )
+
+void PacketHandler( Client_Session* clientSession )
 {
 	MessageHeader messageHeader;
 
-	while ( codedInputStream.ReadRaw( &messageHeader, MessageHeaderSize ) )
+	char* start = clientSession->mRecvBuffer->GetBufferStart();
+	memcpy( &messageHeader, start, MessageHeaderSize );
+	clientSession->mRecvBuffer->Remove( MessageHeaderSize );
+
+	const void* pPacket = clientSession->mRecvBuffer->GetBufferStart();
+
+	//while ( codedInputStream.ReadRaw( &messageHeader, MessageHeaderSize ) )
 	{
-		if ( clientSession == NULL )
-		{
-			printf_s( "NULL 이네요\n" );
-		}
-
-		const void* pPacket = NULL;
-		int remainSize = 0;
-		bool IsOK = false;
-		IsOK = codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
-
-		if ( IsOK == false )
-		{
-			break;
-		}
-
-		if ( remainSize < (signed)messageHeader.size )
-		{
-			printf_s( "buffer remain size is lesser than Message!" );
-			break;
-		}
+// 		const void* pPacket = NULL;
+// 		int remainSize = 0;
+// 		bool IsOK = false;
+// 		IsOK = codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
+// 
+// 		if ( IsOK == false )
+// 		{
+// 			break;
+// 		}
+// 
+// 		if ( remainSize < (signed)messageHeader.size )
+// 		{
+// 			printf_s( "buffer remain size is lesser than Message! \n" );
+// 
+// 			break;
+// 		}
 
 		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
 		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
 
-		codedInputStream.Skip( messageHeader.size );
+		//codedInputStream.Skip( messageHeader.size );
 
 		switch ( messageHeader.type )
 		{
@@ -160,7 +166,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 			
-			codedInputStream.ConsumedEntireMessage();
+			//codedInputStream.ConsumedEntireMessage();
 
 			printf( "Login Success ! Player Id : %d Session Id : %d \n", message.playerid(), clientSession->m_SessionId );
 			printf( "Player Name : %s \n", message.playername() );
@@ -190,8 +196,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
 
-			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
-			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
 			DWORD sendByte = 0;
 
 			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
@@ -208,7 +212,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				printf_s( " Chat Data Send OK \n" );
 			}
 
-			
 			break;
 		}
 		//서버에 only 에코 기능만 있을 때 테스트용
@@ -218,7 +221,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 
-			codedInputStream.ConsumedEntireMessage();
+			//codedInputStream.ConsumedEntireMessage();
 
 			printf("Player Id : %d \n", message.playerid());
 			break;
@@ -229,9 +232,11 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 			
-			codedInputStream.ConsumedEntireMessage();
+			//	printf_s( "%d \n", message.ByteSize() );
 
-			printf_s( "[CHAT] [%s] : %s \n", message.playername(), message.playermessage().c_str() );
+			//codedInputStream.ConsumedEntireMessage();
+
+			printf_s( "[CHAT] [from %s] : %s \n", message.playername(), message.playermessage().c_str() );
 
 			// 채팅 성공하면 이동을 보내기 시작
 
@@ -252,10 +257,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
+			DWORD sendByte;
 
-			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
-			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
-			DWORD sendByte = 0;
+			Sleep( 100 );
 
 			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
 			{
@@ -278,7 +282,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
 
-			codedInputStream.ConsumedEntireMessage();
+			//codedInputStream.ConsumedEntireMessage();
 
 
 			// 이동 성공하면 채팅을 보내기 시작
@@ -300,10 +304,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
+			DWORD sendByte;
 
-			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
-			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
-			DWORD sendByte = 0;
+			Sleep( 100 );
 
 			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
 			{
@@ -319,11 +322,11 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				printf_s( " Chat Data Send OK \n" );
 			}
 
-
 			break;
 		}
 		}
 
+		clientSession->mRecvBuffer->Remove( messageHeader.size );
 	}
 }
 
@@ -357,7 +360,8 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 
 			if ( !WSARecv( session->m_Socket, &( session->m_WsaRecvBuf ), 1, &dwByteRecv, &session->m_Flag, (LPWSAOVERLAPPED)( session ), NULL ) )
 			{
-				PacketHandler( *( session->m_pInputCodedStream ), session );
+				session->mRecvBuffer->Commit( dwByteRecv );
+				PacketHandler( session );
 				session->m_TotalRecvSize += dwByteRecv;
 
 				continue;
@@ -410,6 +414,8 @@ int main( void )
 	{
 		Client_Session* clientSession = new Client_Session();
 		ZeroMemory( clientSession, sizeof( Client_Session ) );
+		
+		clientSession->mRecvBuffer = new CircularBuffer( MAX_BUFFER_SIZE );
 
 		clientSession->m_Socket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
 		if ( clientSession->m_Socket == INVALID_SOCKET )
@@ -446,9 +452,6 @@ int main( void )
 		clientSession->m_pOutputArrayStream = new google::protobuf::io::ArrayOutputStream( clientSession->m_SendBuffer, MAX_BUFFER_SIZE );
 		clientSession->m_pOutputCodedStream = new google::protobuf::io::CodedOutputStream( clientSession->m_pOutputArrayStream );
 		
-		clientSession->m_pInputArrayStream = new google::protobuf::io::ArrayInputStream( clientSession->m_RecvBuffer, MAX_BUFFER_SIZE );
-		clientSession->m_pInputCodedStream = new google::protobuf::io::CodedInputStream( clientSession->m_pInputArrayStream );
-
 		// 로그인 패킷 보내기
 		MyPacket::LoginRequest loginPacket;
 		loginPacket.set_playerid( clientSession->m_SessionId );
@@ -465,8 +468,8 @@ int main( void )
 		clientSession->m_WsaSendBuf.buf = (CHAR*)(clientSession->m_SendBuffer);
 		clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
 
-		clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
-		clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
+		clientSession->m_WsaRecvBuf.buf = clientSession->mRecvBuffer->GetBuffer();
+		clientSession->m_WsaRecvBuf.len = (ULONG)clientSession->mRecvBuffer->GetFreeSpaceSize();
 		DWORD sendByte = 0;
 
 		if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPOVERLAPPED)clientSession, NULL ) )

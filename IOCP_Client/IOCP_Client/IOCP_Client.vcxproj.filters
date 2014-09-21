@@ -24,10 +24,16 @@
     <ClCompile Include="MyPacket.pb.cc">
       <Filter>Packet</Filter>
     </ClCompile>
+    <ClCompile Include="CircularBuffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MyPacket.pb.h">
       <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="CircularBuffer.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
