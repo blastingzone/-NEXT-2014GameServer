@@ -1,6 +1,6 @@
 #pragma once
-#include <map>
-#include <XTL.h>
+#include "XTL.h"
+#include "FastSpinlock.h"
 
 #define MAP_MAX_SIZE_TOP		1000
 #define MAP_MAX_SIZE_BOT		-1000

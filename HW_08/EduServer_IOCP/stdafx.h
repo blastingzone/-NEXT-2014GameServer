@@ -22,6 +22,7 @@
 #include <functional>
 #include <deque>
 #include <vector>
+#include <map>
 #include <type_traits>
 #include <iostream>
 #include <sstream>
