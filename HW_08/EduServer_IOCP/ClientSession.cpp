@@ -236,7 +236,8 @@ void ClientSession::PacketHandler()
 		for (auto iter : playerList)
 		{
 			MyPacket::ChatResult chatPacket;
-			chat.append("아이디는 %d", mPlayer.GetPlayerId());
+			chat = "서버: 니놈의 아이디는" + mPlayer.GetPlayerId() + chat;
+			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
 
 			WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *m_pCodedOutputStream);
