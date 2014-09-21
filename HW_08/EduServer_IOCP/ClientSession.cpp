@@ -206,20 +206,17 @@ void ClientSession::PacketHandler()
 		char* name = "kim";
 		loginResult.set_playername( name );
 
-		MyPacket::Position position;
-		position.set_x( 1.0f );
-		position.set_y( 2.0f );
-		position.set_z( 3.0f );
-
-		// MyToDo: message 안에 message 쓰는 방법을 찾아봐야한다...!
-		loginResult.mutable_playerpos()->set_x(1.0f);
-		loginResult.mutable_playerpos()->set_y( 2.0f );
-		loginResult.mutable_playerpos()->set_z( 3.0f );
+		// message 안에 message 쓰는 방법
+		// mutable로 멤버변수를 불러온다 -> set 으로 값을 정해준다
+		// 일반 함수인 .멤버변수() 얘는 읽기 전용이라 const로 리턴된다. 그럼 당연히 값을 못쓰겠죠잉
+		loginResult.mutable_playerpos()->set_x( 1.0 * message.playerid() );
+		loginResult.mutable_playerpos()->set_y( 1.0 * message.playerid() );
+		loginResult.mutable_playerpos()->set_z( 1.0 * message.playerid() );
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *m_pCodedOutputStream );
 
 		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
-		// 하하 그런건 없었습니다!
+		// 하하 그런건 없었습니다! ㅠㅠ
 		if ( false == PostSend( (const char*)m_SessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
 			break;
 
@@ -271,14 +268,15 @@ void ClientSession::ProtobufInit()
 
 void ClientSession::ProtobufReleae()
 {
-	if ( m_pArrayOutputStream )
-	{
-		m_pArrayOutputStream;
-	}
-		
 	if ( m_pCodedOutputStream )
 	{
 		delete m_pCodedOutputStream;
 	}
+		
+	if ( m_pArrayOutputStream )
+	{
+		delete m_pArrayOutputStream;
+	}
+
 }
 
