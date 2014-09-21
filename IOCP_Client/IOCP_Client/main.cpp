@@ -162,11 +162,9 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			
 			codedInputStream.ConsumedEntireMessage();
 
-			printf( "Login Success ! Player Id : %d \n", message.playerid() );
+			printf( "Login Success ! Player Id : %d Session Id : %d \n", message.playerid(), clientSession->m_SessionId );
 			printf( "Player Name : %s \n", message.playername() );
 			printf( "Player Position : %f, %f, %f \n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z() );
-
-			printf_s( "session id : %d \n", clientSession->m_SessionId );
 
 			clientSession->m_Position.posX = message.playerpos().x();
 			clientSession->m_Position.posY = message.playerpos().y();
@@ -178,8 +176,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			std::string chat( "chatting!" );
 			chat.append( "session id : " );
 			chat.append( std::to_string(clientSession->m_SessionId) );
-
-			printf( "Chat Data : %s \n", chat.c_str() );
 
 			chatPacket.set_playerid( clientSession->m_SessionId );
 			chatPacket.set_playermessage(chat.c_str());
@@ -212,6 +208,7 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 				printf_s( " Chat Data Send OK \n" );
 			}
 
+			
 			break;
 		}
 		//서버에 only 에코 기능만 있을 때 테스트용
@@ -231,10 +228,10 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			MyPacket::ChatResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
-
+			
 			codedInputStream.ConsumedEntireMessage();
 
-			printf_s( "[CHAT] [%s] : %s \n", message.playername(), message.playermessage() );
+			printf_s( "[CHAT] [%s] : %s \n", message.playername(), message.playermessage().c_str() );
 
 			// 채팅 성공하면 이동을 보내기 시작
 
@@ -249,6 +246,30 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			movePacket.mutable_playerpos()->set_y( clientSession->m_Position.posY );
 			movePacket.mutable_playerpos()->set_z( clientSession->m_Position.posZ );
 
+			InitSendBufferOnly( clientSession );
+
+			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, movePacket, *( clientSession->m_pOutputCodedStream ) );
+
+			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
+			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
+
+			clientSession->m_WsaRecvBuf.buf = (CHAR*)( clientSession->m_RecvBuffer );
+			clientSession->m_WsaRecvBuf.len = MAX_BUFFER_SIZE;
+			DWORD sendByte = 0;
+
+			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+			{
+				if ( WSAGetLastError() != WSA_IO_PENDING )
+				{
+					deleteClientSession( clientSession );
+					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
+				}
+			}
+			else
+			{
+				clientSession->m_TotalSendSize += sendByte;
+				printf_s( " Move Data Send OK \n" );
+			}
 			break;
 		}
 		case MyPacket::MessageType::PKT_SC_MOVE:
@@ -266,8 +287,6 @@ void PacketHandler( google::protobuf::io::CodedInputStream &codedInputStream, Cl
 			std::string chat( "chatting!" );
 			chat.append( "session id : " );
 			chat.append( std::to_string( clientSession->m_SessionId ) );
-
-			printf( "Chat Data : %s \n", chat.c_str() );
 
 			chatPacket.set_playerid( clientSession->m_SessionId );
 			chatPacket.set_playermessage( chat.c_str() );
