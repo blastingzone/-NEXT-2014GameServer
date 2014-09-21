@@ -231,19 +231,20 @@ void ClientSession::PacketHandler()
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
-		for (auto iter : zone->mPlayerList)
+		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
+		PlayerList playerList = zone->GetPlayerList();
+		for (auto iter : playerList)
 		{
-			PlayerPtr player();
-
-			MyPacket::ChatRequest chatPacket;
+			MyPacket::ChatResult chatPacket;
 			chat.append("아이디는 %d", mPlayer.GetPlayerId());
-
-			chatPacket.set_playerid(mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
 
-			//WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, );
+			WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *m_pCodedOutputStream);
+
+			//플레이어 리스트에 있는 세션을 이용하여 send
+			if (false == iter->mSession->PostSend((const char*)m_SessionBuffer, chatPacket.ByteSize() + MessageHeaderSize))
+				break;
 		}
-		
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_MOVE:
@@ -253,6 +254,20 @@ void ClientSession::PacketHandler()
 			break;
 
 		mPlayer.RequestUpdatePosition(message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
+
+		//이동처리가 완료됨을 알리는 페킷
+		MyPacket::MoveResult movePacket;
+
+		movePacket.set_playerid(mPlayer.GetPlayerId());
+		movePacket.mutable_playerpos()->set_x(message.playerpos().x());
+		movePacket.mutable_playerpos()->set_y(message.playerpos().y());
+		movePacket.mutable_playerpos()->set_z(message.playerpos().z());
+
+		WriteMessageToStream(MyPacket::MessageType::PKT_CS_CHAT, movePacket, *m_pCodedOutputStream);
+
+		if (false == PostSend((const char*)m_SessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
+			break;
+
 		break;
 	}
 	}

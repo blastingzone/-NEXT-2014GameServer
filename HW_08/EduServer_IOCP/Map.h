@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <XTL.h>
 
 #define MAP_MAX_SIZE_TOP		1000
 #define MAP_MAX_SIZE_BOT		-1000
@@ -16,7 +17,11 @@ typedef std::shared_ptr<Zone> ZonePtr;
 
 class Player;
 typedef std::shared_ptr<Player> PlayerPtr;
-typedef std::map<int, PlayerPtr> PlayerInZoneLIST;
+typedef xmap<int, PlayerPtr>::type PlayerMap;
+typedef xvector<PlayerPtr>::type PlayerList;
+
+typedef concurrency::concurrent_unordered_map<int, PlayerPtr, STLAllocator<PlayerPtr>> CentralPlayerMap;
+
 
 class Map
 {
@@ -26,11 +31,9 @@ public:
 
 	ZonePtr GetZone(float x, float y);
 
-
 private:
 
 	ZonePtr mZoneList[MAP_ZONE_ROW_NUM][MAP_ZONE_COL_NUM];
-
 	void MakeZoneList();
 };
 
@@ -61,15 +64,19 @@ public:
 	Zone(int zoneSize, int maxSize);
 	~Zone();
 
-	//이 부분 락으로 보호 필요
 	void		PushPlayer(PlayerPtr player);
 	PlayerPtr	PopPlayer(int playerID);
+	PlayerList	GetPlayerList();
 
-	PlayerInZoneLIST mPlayerList;
+	//일단 공개
+	//CentralPlayerMap mPlayerList;
 
 private:
 
 	ZonePtr mNeighbor[NEIGHBOR_MAX];
 	float	mConner[4][2];
+
+	PlayerMap mPlayerMap;
+	FastSpinlock mZoneLock;
 };
 

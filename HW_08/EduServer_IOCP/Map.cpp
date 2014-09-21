@@ -19,8 +19,12 @@ ZonePtr Map::GetZone(float x, float y)
 	int row = static_cast<int>((x - MAP_MAX_SIZE_LEFT) / ZONE_SIZE);
 	int col = static_cast<int>((y - MAP_MAX_SIZE_TOP) / ZONE_SIZE);
 
-	if (row < 0 || row >= MAP_ZONE_ROW_NUM || col < 0 || col >= MAP_ZONE_COL_NUM)
-		return nullptr;
+	//맵 밖으로 나가면 zone[0][0]에서 처리하도록
+	if (row < 0 || 
+		row >= MAP_ZONE_ROW_NUM || 
+		col < 0 || 
+		col >= MAP_ZONE_COL_NUM)
+		return mZoneList[0][0];
 
 	return mZoneList[row][col];
 }
@@ -67,12 +71,35 @@ Zone::~Zone()
 
 void Zone::PushPlayer(PlayerPtr player)
 {
-	mPlayerList[player->GetPlayerId()] = player;
+	FastSpinlockGuard criticalSection(mZoneLock);
+	
+	//있을 경우 덮어쓰고 없을 경우 생성
+	mPlayerMap[player->GetPlayerId()] = player;
 }
 
 PlayerPtr Zone::PopPlayer(int playerID)
 {
-	PlayerPtr player = mPlayerList.find( playerID )->second;
-	mPlayerList.erase(playerID);
+	FastSpinlockGuard criticalSection(mZoneLock);
+
+	PlayerPtr player = mPlayerMap.find(playerID)->second;
+	mPlayerMap.erase(playerID);
 	return player;
+}
+
+PlayerList Zone::GetPlayerList()
+{
+	//read mode
+	FastSpinlockGuard criticalSection(mZoneLock, false);
+
+	//todo :vector 미리 확장해두어야함
+	PlayerList playerVec;
+
+	int i = 0;
+	for (auto iter : mPlayerMap)
+	{
+		playerVec[i] = iter.second;
+		++i;
+	}
+
+	return playerVec;
 }

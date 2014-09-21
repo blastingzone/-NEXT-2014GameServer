@@ -29,5 +29,6 @@
 
 #include <ppl.h>
 #include <concurrent_queue.h>
+#include <concurrent_unordered_map.h>
 
 // TODO: reference additional headers your program requires here

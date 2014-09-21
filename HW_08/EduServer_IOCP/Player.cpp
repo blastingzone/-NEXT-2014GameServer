@@ -12,18 +12,7 @@
 
 Player::Player(ClientSession* session) : mSession(session)
 {
-	memset( mPlayerName, 0, sizeof( mPlayerName ) );
-	memset( mComment, 0, sizeof( mComment ) );
-	mPlayerId = -1;
-	mIsValid = false;
-	mPosX = mPosY = mPosZ = 0;
-
-	/// 플레이어 맵에서 제거
-	GPlayerManager->UnregisterPlayer( mPlayerId );
-
-	mPlayerId = -1;
-	mHeartBeat = -1;
-	mIsAlive = false;
+	PlayerReset();
 }
 
 Player::~Player()
@@ -34,11 +23,6 @@ Player::~Player()
 void Player::PlayerReset()
 {
 	FastSpinlockGuard criticalSection(mPlayerLock);
-
-	SetZone();
-
-	mZone->PopPlayer(mPlayerId);
-	mZone = nullptr;
 
 	memset(mPlayerName, 0, sizeof(mPlayerName));
 	memset(mComment, 0, sizeof(mComment));
@@ -61,8 +45,6 @@ void Player::Start(int heartbeat)
 	
 	/// ID 발급 및 플레잉어 맵에 등록
 	mPlayerId = GPlayerManager->RegisterPlayer(GetSharedFromThis<Player>());
-
-	
 
 	/// 생명 불어넣기 ㄱㄱ
 	//OnTick();
@@ -157,6 +139,7 @@ void Player::ResponseUpdatePosition(float x, float y, float z)
 	mPosY = y;
 	mPosZ = z;
 
+	//DB처리를 성공하면 zone을 설정
 	SetZone();
 }
 
@@ -215,6 +198,18 @@ void Player::ResponseDeletePlayerData(int playerId)
 
 void Player::SetZone()
 {
-	mZone = GMap->GetZone(mPosX, mPosZ);
-	mZone->PushPlayer(GetSharedFromThis<Player>());
+	//나중에 map밖으로 나갈경우를 고려해야함
+	ZonePtr newZone = GMap->GetZone(mPosX, mPosZ);
+	
+	if (newZone != mZone) 
+	{
+		//이전 존에서 삭제
+		//일단 최초의 경우는 무시하도록 함 (수정 예정)
+		if (mZone != nullptr)
+			mZone->PopPlayer(mPlayerId);
+		//플레이어의 존 교체
+		mZone = newZone;
+		//새로운 존에 추가
+		mZone->PushPlayer(GetSharedFromThis<Player>());
+	}
 }
