@@ -240,18 +240,20 @@ void ClientSession::PacketHandler()
 		MyPacket::ChatRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
-
+		
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
-		PlayerList playerList = zone->GetPlayerList();
+		PlayerPtrList playerList = zone->GetPlayerList();
 		for (auto iter : playerList)
 		{
 			MyPacket::ChatResult chatPacket;
-			chat = "server to client : your id : " + mPlayer.GetPlayerId() + chat;
+			chat.append( "server to client : your id : " );
+			chat.append( std::to_string( mPlayer.GetPlayerId() ) );
 			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 			chatPacket.set_playermessage(chat.c_str());
+			chatPacket.set_playername( "kim" ); //모조리 김씨
 
 			ProtobufSendbufferRecreate();
 

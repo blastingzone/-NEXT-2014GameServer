@@ -22,7 +22,7 @@ public:
 private:
 	FastSpinlock mLock;
 	int mCurrentIssueId;
-	xmap<int, std::shared_ptr<Player>>::type mPlayerMap;
+	xmap<int, std::shared_ptr<Player>>::type mPlayerSharedPtrMap;
 };
 
 extern PlayerManager* GPlayerManager;

@@ -69,43 +69,53 @@ Zone::~Zone()
 {
 }
 
-void Zone::PushPlayer(PlayerPtr player)
+void Zone::PushPlayer(Player* player)
 {
 	FastSpinlockGuard criticalSection(mZoneLock);
 	
 	//있을 경우 덮어쓰고 없을 경우 생성
-	if ( player == mPlayerMap.find( player->GetPlayerId() )->second )
-	{
+// 	if ( player == mPlayerMap.find( player->GetPlayerId() )->second )
+// 	{
+// 
+// 	}
+// 	else
+// 	{
+// 		mPlayerMap.insert( make_pair(player->GetPlayerId(), player) );
+// 	}
 
-	}
-	else
-	{
-		mPlayerMap.insert( make_pair(player->GetPlayerId(), player) );
-	}
+	// 이게 더 좋단 말이지? ㅋㅋ
+	mPlayerMap[player->GetPlayerId()] = player;
+
 }
 
-PlayerPtr Zone::PopPlayer(int playerID)
+Player* Zone::PopPlayer( int playerID )
 {
 	FastSpinlockGuard criticalSection(mZoneLock);
 
-	PlayerPtr player = mPlayerMap.find(playerID)->second;
+	Player* player = mPlayerMap.find(playerID)->second;
 	mPlayerMap.erase(playerID);
 	return player;
 }
 
-PlayerList Zone::GetPlayerList()
+PlayerPtrList Zone::GetPlayerList()
 {
 	//read mode
 	FastSpinlockGuard criticalSection(mZoneLock, false);
 
 	//todo :vector 미리 확장해두어야함
-	PlayerList playerVec;
+	PlayerPtrList playerVec;
 
-	int i = 0;
-	for (auto iter : mPlayerMap)
+// 	int i = 0;
+// 	for (auto iter : mPlayerMap)
+// 	{
+// 		playerVec[i] = iter.second;
+// 		++i;
+// 	}
+
+	// 고전적인 루프 ㅋㅋ
+	for ( auto iter = mPlayerMap.begin(); iter != mPlayerMap.end(); ++iter )
 	{
-		playerVec[i] = iter.second;
-		++i;
+		playerVec.push_back( iter->second );
 	}
 
 	return playerVec;

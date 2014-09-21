@@ -29,7 +29,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	GGrandCentralExecuter = new GrandCentralExecuter;
 	GPlayerManager = new PlayerManager;
 	GDatabaseManager = new DBManager;
-	GMap = new Map;
+	GMap = new Map();
 
 	/// main thread도 lock order check...
 	LLockOrderChecker = new LockOrderChecker(-1);

@@ -211,7 +211,7 @@ void Player::SetZone()
 		//플레이어의 존 교체
 		mZone = newZone;
 		//새로운 존에 추가
-		mZone->PushPlayer(GetSharedFromThis<Player>());
+		mZone->PushPlayer(this);
 	}
 }
 

@@ -58,7 +58,6 @@ public:
 	Player			mPlayer;
 
 private:
-
 	SOCKADDR_IN		mClientAddr;
 	google::protobuf::io::ArrayOutputStream* mArrayOutputStream = nullptr;
 	google::protobuf::io::CodedOutputStream* mCodedOutputStream = nullptr;

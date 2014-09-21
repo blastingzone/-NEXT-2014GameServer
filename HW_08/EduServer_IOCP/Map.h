@@ -17,8 +17,10 @@ typedef std::shared_ptr<Zone> ZonePtr;
 
 class Player;
 typedef std::shared_ptr<Player> PlayerPtr;
-typedef xmap<int, PlayerPtr>::type PlayerMap;
-typedef xvector<PlayerPtr>::type PlayerList;
+typedef xmap<int, Player*>::type PlayerMap;
+//typedef std::map<int, Player*> PlayerMap;
+//typedef xvector<Player*>::type PlayerList; // 재정의 오류 : PlayerManager에 같은 이름이 있음
+typedef std::vector<Player*> PlayerPtrList;
 
 typedef concurrency::concurrent_unordered_map<int, PlayerPtr, STLAllocator<PlayerPtr>> CentralPlayerMap;
 
@@ -64,9 +66,9 @@ public:
 	Zone(int zoneSize, int maxSize);
 	~Zone();
 
-	void		PushPlayer(PlayerPtr player);
-	PlayerPtr	PopPlayer(int playerID);
-	PlayerList	GetPlayerList();
+	void			PushPlayer( Player* player );
+	Player*			PopPlayer( int playerID );
+	PlayerPtrList	GetPlayerList();
 
 	//일단 공개
 	//CentralPlayerMap mPlayerList;
