@@ -16,7 +16,6 @@ Session::Session( size_t sendBufSize, size_t recvBufSize )
 }
 
 
-
 void Session::DisconnectRequest( DisconnectReason dr )
 {
 	TRACE_THIS;
@@ -146,12 +145,14 @@ bool Session::FlushSend()
 		if ( 0 == mSendPendingCount )
 			return true;
 
-		return false;
+		//return false;
+		return true;
 	}
 
 	/// 이전의 send가 완료 안된 경우
 	if ( mSendPendingCount > 0 )
-		return false;
+		//return false;
+		return true;
 
 
 	OverlappedSendContext* sendContext = new OverlappedSendContext( this );
