@@ -26,6 +26,7 @@ public:
 	ClientSession();
 	virtual ~ClientSession();
 
+	//Session부분으로 나눠야 겠다
 	void SessionReset();
 
 	void ProtobufInit();

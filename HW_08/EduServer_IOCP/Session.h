@@ -2,6 +2,7 @@
 #include "CircularBuffer.h"
 #include "OverlappedIOContext.h"
 #include "MyPacket.pb.h"
+#include "Crypt.h"
 
 class Session
 {
@@ -14,9 +15,12 @@ public:
 
 	void DisconnectRequest(DisconnectReason dr);
 
+	void CryptPacketHandler();
+
 	bool PreRecv(); ///< zero byte recv
 	bool PostRecv();
 
+	bool EncryptSend(char* data, size_t len);
 	bool PostSend(const char* data, size_t len);
 	bool FlushSend();
 
@@ -38,6 +42,8 @@ public:
 protected:
 
 	SOCKET			mSocket;
+	Crypt			mCrpyt;
+	CircularBuffer	mDecryptedPacketBuffer;
 
 	CircularBuffer	mRecvBuffer;
 	CircularBuffer	mSendBuffer;

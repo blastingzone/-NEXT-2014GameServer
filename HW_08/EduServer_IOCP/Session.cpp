@@ -6,11 +6,13 @@
 #include "OverlappedIOContext.h"
 #include "Session.h"
 #include "IocpManager.h"
+#include "CryptPacket.h"
 
 __declspec( thread ) std::deque<Session*>* LSendRequestSessionList = nullptr;
 
 Session::Session( size_t sendBufSize, size_t recvBufSize )
-: mSendBuffer( sendBufSize ), mRecvBuffer( recvBufSize ), mConnected( 0 ), mRefCount( 0 ), mSendPendingCount( 0 )
+: mSendBuffer( sendBufSize ), mRecvBuffer( recvBufSize ), mConnected( 0 ), mRefCount( 0 ), mSendPendingCount( 0 ),
+mDecryptedPacketBuffer(sendBufSize)
 {
 	mSocket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
 }
@@ -242,4 +244,64 @@ void Session::EchoBack()
 
 	mRecvBuffer.Remove( len );
 
+}
+
+void Session::CryptPacketHandler()
+{
+	CryptPacketHeader cryptHeader;
+	//나중에 따로 빼자
+	int crypteHeaderSize = sizeof(CryptPacketHeader);
+
+	//헤더제거작업
+	char* start = mRecvBuffer.GetBufferStart();
+	memcpy(&cryptHeader, start, crypteHeaderSize);
+	mRecvBuffer.Remove(crypteHeaderSize);
+
+	//포인트간의 형변환
+	PBYTE data = (PBYTE)mRecvBuffer.GetBufferStart();
+	
+	switch (cryptHeader.mType)
+	{
+	case PKT_CP_FIRST:
+		
+		mCrpyt.CreatePrivateKey();
+		mCrpyt.ExportPublicKey();
+
+		mCrpyt.ImportPublicKey(data, cryptHeader.mSize);
+		mCrpyt.ConvertRC4();
+
+		
+
+		//PostSend((const char*), mCrpyt.GetDataLen() + crypteHeaderSize);
+
+		break;
+	case PKT_CP_SECOND:
+		//이게 올리가 없다.
+		CRASH_ASSERT(false);
+		break;
+	case PKT_CP_OK:
+
+		//암호해독
+		mCrpyt.RC4Decrypt(data, cryptHeader.mSize);
+
+		//이후 decrypted버퍼에 저장
+		char* destData = mDecryptedPacketBuffer.GetBuffer();
+		memcpy(destData, data, cryptHeader.mSize);
+		mDecryptedPacketBuffer.Commit(cryptHeader.mSize);
+
+		break;
+	}
+
+	mRecvBuffer.Remove(cryptHeader.mSize);
+}
+
+bool Session::EncryptSend(char* data, size_t len)
+{
+	//암호화
+	mCrpyt.RC4Encyrpt((PBYTE)data, (DWORD)len);
+
+	//페킷 헤더 추가
+	
+
+	PostSend(data, len);
 }
