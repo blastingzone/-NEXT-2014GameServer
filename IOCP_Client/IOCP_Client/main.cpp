@@ -259,7 +259,7 @@ void PacketHandler( Client_Session* clientSession )
 
 			InitSendBufferOnly( clientSession );
 
-			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, movePacket, *( clientSession->m_pOutputCodedStream ) );
+			WriteMessageToStream( MyPacket::MessageType::PKT_CS_MOVE, movePacket, *( clientSession->m_pOutputCodedStream ) );
 
 			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
@@ -290,6 +290,7 @@ void PacketHandler( Client_Session* clientSession )
 
 			//codedInputStream.ConsumedEntireMessage();
 
+			printf_s( "Move Data Arrive!!\n" );
 
 			// 이동 성공하면 채팅을 보내기 시작
 
