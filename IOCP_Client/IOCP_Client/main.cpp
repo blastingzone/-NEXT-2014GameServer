@@ -215,17 +215,17 @@ void PacketHandler( Client_Session* clientSession )
 			break;
 		}
 		//서버에 only 에코 기능만 있을 때 테스트용
-		case MyPacket::MessageType::PKT_CS_LOGIN:
-		{
-			MyPacket::LoginRequest message;
-			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
-				break;
-
-			//codedInputStream.ConsumedEntireMessage();
-
-			printf("Player Id : %d \n", message.playerid());
-			break;
-		}
+// 		case MyPacket::MessageType::PKT_CS_LOGIN:
+// 		{
+// 			MyPacket::LoginRequest message;
+// 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+// 				break;
+// 
+// 			//codedInputStream.ConsumedEntireMessage();
+// 
+// 			printf("Player Id : %d \n", message.playerid());
+// 			break;
+// 		}
 		case MyPacket::MessageType::PKT_SC_CHAT:
 		{
 			MyPacket::ChatResult message;
