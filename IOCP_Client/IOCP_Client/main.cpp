@@ -14,7 +14,7 @@
 
 #define MAX_CONNECTION 1000
 #define TOTAL_MESSAGE_BYTE 20000
-#define MAX_BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 10240
 #define TIMEOUT_MILLISECOND 40000
 
 #define SERVER_PORT 9000
@@ -127,9 +127,15 @@ void InitSendBufferOnly( Client_Session* clientSession )
 void PacketHandler( Client_Session* clientSession )
 {
 	MessageHeader messageHeader;
+	if ( clientSession->mRecvBuffer->GetStoredSize() < MessageHeaderSize )
+		return;
 
 	char* start = clientSession->mRecvBuffer->GetBufferStart();
 	memcpy( &messageHeader, start, MessageHeaderSize );
+	
+	if ( clientSession->mRecvBuffer->GetStoredSize() < MessageHeaderSize + messageHeader.size )
+		return;
+
 	clientSession->mRecvBuffer->Remove( MessageHeaderSize );
 
 	const void* pPacket = clientSession->mRecvBuffer->GetBufferStart();
