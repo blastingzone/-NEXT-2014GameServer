@@ -112,7 +112,11 @@ bool Session::PostSend( const char* data, size_t len )
 	FastSpinlockGuard criticalSection( mSendBufferLock );
 
 	if ( mSendBuffer.GetFreeSpaceSize() < len )
+	{
+		printf_s( "Buffer Too Small! buffer : %d, len : %d\n", mSendBuffer.GetFreeSpaceSize(), len );
 		return false;
+	}
+	
 
 	/// flush later...
 	LSendRequestSessionList->push_back( this );

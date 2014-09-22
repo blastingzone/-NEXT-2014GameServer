@@ -6,7 +6,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/text_format.h>
 
-#define MAX_BUFFER_SIZE 4096
+#define MAX_BUFFER_SIZE 20480
 
 class ClientSessionManager;
 

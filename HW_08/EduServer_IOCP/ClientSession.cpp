@@ -232,7 +232,11 @@ void ClientSession::PacketHandler()
 		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
 		// 하하 그런건 없었습니다! ㅠㅠ
 		if ( false == PostSend( (const char*)mSessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
+		{
+			printf_s( "PostSend Error! Login Packet Process Fail \n" );
 			break;
+		}
+			
 
 		break;
 	}
@@ -246,24 +250,33 @@ void ClientSession::PacketHandler()
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
+		MyPacket::ChatResult chatPacket;
+		chat.append( "\n" );
+		chat.append( "server to client : chat from id : " );
+		chat.append( std::to_string( mPlayer.GetPlayerId() ) );
+		chat.append( "\n" );
+		//chat.append("아이디는 %d", mPlayer.GetPlayerId());
+		chatPacket.set_playermessage( chat.c_str() );
+		chatPacket.set_playername( "kim" ); //모조리 김씨
+
+		ProtobufSendbufferRecreate();
+
+		WriteMessageToStream( MyPacket::MessageType::PKT_SC_CHAT, chatPacket, *( mCodedOutputStream ) );
+
 		PlayerPtrList playerList = zone->GetPlayerList();
+
 		for (auto iter : playerList)
 		{
-			MyPacket::ChatResult chatPacket;
-			chat.append( "server to client : char from id : " );
-			chat.append( std::to_string( mPlayer.GetPlayerId() ) );
-			chat.append( "\n" );
-			//chat.append("아이디는 %d", mPlayer.GetPlayerId());
-			chatPacket.set_playermessage(chat.c_str());
-			chatPacket.set_playername( "kim" ); //모조리 김씨
-
-			ProtobufSendbufferRecreate();
-
-			WriteMessageToStream(MyPacket::MessageType::PKT_SC_CHAT, chatPacket, *mCodedOutputStream);
+			google::protobuf::uint8 tempSessionBuffer[256 + MAX_BUFFER_SIZE];
+			memcpy( tempSessionBuffer, mSessionBuffer, chatPacket.ByteSize() + MessageHeaderSize );
 
 			//플레이어 리스트에 있는 세션을 이용하여 send
-			if (false == iter->mSession->PostSend((const char*)mSessionBuffer, chatPacket.ByteSize() + MessageHeaderSize))
+			if ( false == iter->mSession->PostSend( (const char*)( tempSessionBuffer ), chatPacket.ByteSize() + MessageHeaderSize ) )
+			{
+				printf_s( "PostSend Error! Chat Packet Process Fail \n" );
 				break;
+			}
+			
 		}
 		break;
 	}
@@ -276,20 +289,24 @@ void ClientSession::PacketHandler()
 		//mPlayer.RequestUpdatePosition(message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
 		mPlayer.SetPosition( message.playerpos().x(), message.playerpos().z() );
 		mPlayer.SetZone();
-		//이동처리가 완료됨을 알리는 페킷
+		//이동처리가 완료됨을 알리는 패킷
+
 		MyPacket::MoveResult movePacket;
 
 		movePacket.set_playerid(mPlayer.GetPlayerId());
-		movePacket.mutable_playerpos()->set_x(message.playerpos().x());
-		movePacket.mutable_playerpos()->set_y(message.playerpos().y());
-		movePacket.mutable_playerpos()->set_z(message.playerpos().z());
+		movePacket.mutable_playerpos()->set_x( mPlayer.mPosX );
+		movePacket.mutable_playerpos()->set_y( mPlayer.mPosY );
+		movePacket.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
 		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream(MyPacket::MessageType::PKT_SC_MOVE, movePacket, *mCodedOutputStream);
 
 		if (false == PostSend((const char*)mSessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
+		{
+			printf_s( "PostSend Error! Move Packet Process Fail \n" );
 			break;
+		}
 
 		break;
 	}
