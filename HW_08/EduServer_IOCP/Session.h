@@ -15,13 +15,15 @@ public:
 
 	void DisconnectRequest(DisconnectReason dr);
 
-	void CryptPacketHandler();
+	//void CryptPacketHandler();
 
 	bool PreRecv(); ///< zero byte recv
 	bool PostRecv();
 
-	bool EncryptSend(char* data, size_t len);
+	//bool EncryptSend(char* data, size_t len);
 	bool PostSend(const char* data, size_t len);
+	//여기서 정보가 어마어마하게 유실됨
+	//쓰레드별로 mod연산해서 처리분량을 부여
 	bool FlushSend();
 
 	void DisconnectCompletion(DisconnectReason dr);
@@ -43,7 +45,6 @@ protected:
 
 	SOCKET			mSocket;
 	Crypt			mCrpyt;
-	CircularBuffer	mDecryptedPacketBuffer;
 
 	CircularBuffer	mRecvBuffer;
 	CircularBuffer	mSendBuffer;
@@ -53,6 +54,7 @@ protected:
 	volatile long	mRefCount;
 	volatile long	mConnected;
 
+	bool			mIsEnCrypt;
 };
 
 

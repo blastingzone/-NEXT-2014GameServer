@@ -10,9 +10,8 @@
 
 __declspec( thread ) std::deque<Session*>* LSendRequestSessionList = nullptr;
 
-Session::Session( size_t sendBufSize, size_t recvBufSize )
-: mSendBuffer( sendBufSize ), mRecvBuffer( recvBufSize ), mConnected( 0 ), mRefCount( 0 ), mSendPendingCount( 0 ),
-mDecryptedPacketBuffer(sendBufSize)
+Session::Session(size_t sendBufSize, size_t recvBufSize)
+	: mSendBuffer(sendBufSize), mRecvBuffer(recvBufSize), mConnected(0), mRefCount(0), mSendPendingCount(0), mIsEnCrypt(false)
 {
 	mSocket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
 }
@@ -151,12 +150,14 @@ bool Session::FlushSend()
 		if ( 0 == mSendPendingCount )
 			return true;
 
-		return false;
+		return true;
+		//return false;
 	}
 
 	/// 이전의 send가 완료 안된 경우
 	if ( mSendPendingCount > 0 )
-		return false;
+		return true;
+		//return false;
 
 
 	OverlappedSendContext* sendContext = new OverlappedSendContext( this );
@@ -248,6 +249,7 @@ void Session::EchoBack()
 
 }
 
+/*
 void Session::CryptPacketHandler()
 {
 	CryptPacketHeader cryptHeader;
@@ -307,3 +309,4 @@ bool Session::EncryptSend(char* data, size_t len)
 
 	PostSend(data, len);
 }
+*/

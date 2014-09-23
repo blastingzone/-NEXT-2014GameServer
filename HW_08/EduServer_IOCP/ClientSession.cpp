@@ -54,7 +54,7 @@ void ClientSession::SessionReset()
 
 	mPlayer.PlayerReset();
 	mCrpyt.Release();
-	mDecryptedPacketBuffer.BufferReset();
+	//mDecryptedPacketBuffer.BufferReset();
 }
 
 bool ClientSession::PostAccept()
@@ -192,6 +192,10 @@ void ClientSession::PacketHandler()
 
 	switch ( messageHeader.mType )
 	{
+	case MyPacket::MessageType::PKT_CS_CYPT:
+	{
+		break;
+	}
 	case MyPacket::MessageType::PKT_CS_LOGIN:
 	{
 		MyPacket::LoginRequest message;
@@ -324,6 +328,12 @@ void ClientSession::PacketHandler()
 			break;
 		}
 		*/
+		break;
+	}
+	default:
+	{
+		//와서는 안될 구역
+		CRASH_ASSERT(false);
 		break;
 	}
 	}
