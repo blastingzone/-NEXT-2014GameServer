@@ -35,8 +35,8 @@ void ClientSession::SessionReset()
 	mSendBuffer.BufferReset();
 	mSendBufferLock.LeaveWriteLock();
 
-	ProtobufRelease();
-	ProtobufInit();
+	//ProtobufRelease();
+	//ProtobufInit();
 
 	LINGER lingerOption;
 	lingerOption.l_onoff = 1;
@@ -172,7 +172,7 @@ void ClientSession::OnRelease()
 	TRACE_THIS;
 
 	GClientSessionManager->ReturnClientSession(this);
-	ProtobufRelease();
+	//ProtobufRelease();
 }
 
 
@@ -186,10 +186,10 @@ void ClientSession::PacketHandler()
 
 	const void* pPacket = mRecvBuffer.GetBufferStart();
 
-	google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
+	google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.mSize );
 	google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
 
-	switch ( messageHeader.type )
+	switch ( messageHeader.mType )
 	{
 	case MyPacket::MessageType::PKT_CS_LOGIN:
 	{
@@ -225,6 +225,9 @@ void ClientSession::PacketHandler()
 		loginResult.mutable_playerpos()->set_y( mPlayer.mPosY );
 		loginResult.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
+		SendRequest(MyPacket::PKT_SC_LOGIN, loginResult);
+
+		/*
 		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *mCodedOutputStream );
@@ -236,7 +239,7 @@ void ClientSession::PacketHandler()
 			printf_s( "PostSend Error! Login Packet Process Fail \n" );
 			break;
 		}
-			
+		*/
 
 		break;
 	}
@@ -259,6 +262,14 @@ void ClientSession::PacketHandler()
 		chatPacket.set_playermessage( chat.c_str() );
 		chatPacket.set_playername( "kim" ); //모조리 김씨
 
+		PlayerPtrList playerList = zone->GetPlayerList();
+
+		for (auto iter : playerList)
+		{
+			iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket);
+		}
+
+		/*
 		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream( MyPacket::MessageType::PKT_SC_CHAT, chatPacket, *( mCodedOutputStream ) );
@@ -278,6 +289,7 @@ void ClientSession::PacketHandler()
 			}
 			
 		}
+		*/
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_MOVE:
@@ -298,6 +310,9 @@ void ClientSession::PacketHandler()
 		movePacket.mutable_playerpos()->set_y( mPlayer.mPosY );
 		movePacket.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
+		SendRequest(MyPacket::PKT_SC_MOVE, movePacket);
+
+		/*
 		ProtobufSendbufferRecreate();
 
 		WriteMessageToStream(MyPacket::MessageType::PKT_SC_MOVE, movePacket, *mCodedOutputStream);
@@ -307,19 +322,21 @@ void ClientSession::PacketHandler()
 			printf_s( "PostSend Error! Move Packet Process Fail \n" );
 			break;
 		}
-
+		*/
 		break;
 	}
 	}
 
-	mRecvBuffer.Remove( messageHeader.size );
+	mRecvBuffer.Remove( messageHeader.mSize );
 }
 
+/*
 void ClientSession::ProtobufInit()
 {
 	mArrayOutputStream = new google::protobuf::io::ArrayOutputStream(mSessionBuffer, MAX_BUFFER_SIZE);
 	mCodedOutputStream = new google::protobuf::io::CodedOutputStream( mArrayOutputStream );
 }
+
 
 void ClientSession::ProtobufSendbufferRecreate()
 {
@@ -340,4 +357,37 @@ void ClientSession::ProtobufRelease()
 		delete mArrayOutputStream;
 		mArrayOutputStream = nullptr;
 	}
+}
+*/
+
+bool ClientSession::SendRequest(MyPacket::MessageType packetType, const google::protobuf::MessageLite& payload)
+{
+	TRACE_THIS;
+
+	if (!IsConnected())
+		return false;
+
+	FastSpinlockGuard criticalSection(mSendBufferLock);
+
+	int totalSize = payload.ByteSize() + MessageHeaderSize;
+	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
+		return false;
+
+	google::protobuf::io::ArrayOutputStream arrayOutputStream(mSendBuffer.GetBuffer(), totalSize);
+	google::protobuf::io::CodedOutputStream codedOutputStream(&arrayOutputStream);
+
+	MessageHeader header;
+	header.mSize = payload.ByteSize();
+	header.mType = packetType;
+
+	codedOutputStream.WriteRaw(&header, MessageHeaderSize);
+	payload.SerializeToCodedStream(&codedOutputStream);
+
+
+	/// flush later...
+	LSendRequestSessionList->push_back(this);
+
+	mSendBuffer.Commit(totalSize);
+
+	return true;
 }
