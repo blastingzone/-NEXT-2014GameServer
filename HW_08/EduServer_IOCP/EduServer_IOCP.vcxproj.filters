@@ -119,9 +119,6 @@
     <ClInclude Include="ServerSession.h">
       <Filter>SessionHandling</Filter>
     </ClInclude>
-    <ClInclude Include="MyPacket.pb.h">
-      <Filter>Packet</Filter>
-    </ClInclude>
     <ClInclude Include="SQLStatement.h">
       <Filter>Contents</Filter>
     </ClInclude>
@@ -138,6 +135,9 @@
       <Filter>Utils</Filter>
     </ClInclude>
     <ClInclude Include="CryptPacket.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\3rdParty\MyPacket.pb.h">
       <Filter>Packet</Filter>
     </ClInclude>
   </ItemGroup>
@@ -217,9 +217,6 @@
     <ClCompile Include="ServerSession.cpp">
       <Filter>SessionHandling</Filter>
     </ClCompile>
-    <ClCompile Include="MyPacket.pb.cc">
-      <Filter>Packet</Filter>
-    </ClCompile>
     <ClCompile Include="PlayerDBContext.cpp">
       <Filter>Contents</Filter>
     </ClCompile>
@@ -228,6 +225,9 @@
     </ClCompile>
     <ClCompile Include="Crypt.cpp">
       <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\MyPacket.pb.cc">
+      <Filter>Packet</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

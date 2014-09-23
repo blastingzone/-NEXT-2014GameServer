@@ -77,7 +77,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)3rdParty</IncludePath>
+    <LibraryPath>$(SolutionDir)3rdParty;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -135,7 +136,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +150,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\3rdParty\MyPacket.pb.h" />
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="ClientSession.h" />
     <ClInclude Include="ClientSessionManager.h" />
@@ -168,7 +170,6 @@
     <ClInclude Include="Log.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="MemoryPool.h" />
-    <ClInclude Include="MyPacket.pb.h" />
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="OverlappedIOContext.h" />
     <ClInclude Include="Player.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Crypt.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rdParty\MyPacket.pb.cc" />
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="ClientSession.cpp" />
     <ClCompile Include="ClientSessionManager.cpp" />
@@ -206,7 +208,6 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
-    <ClCompile Include="MyPacket.pb.cc" />
     <ClCompile Include="OverlappedIOContext.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerDBContext.cpp" />
