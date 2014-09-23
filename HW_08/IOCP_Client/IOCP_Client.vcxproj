@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\MyPacket.pb.h" />
+    <ClInclude Include="..\3rdParty\PacketHeader.h" />
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

@@ -4,11 +4,12 @@
 #include <vector>
 #include <process.h>
 #include "MyPacket.pb.h"
+#include <string>
+#include "CircularBuffer.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/text_format.h"
-#include <string>
-#include "CircularBuffer.h"
+#include "PacketHeader.h"
 
 #pragma comment(lib, "ws2_32.lib") 
 
@@ -88,14 +89,6 @@ void deleteClientSession( Client_Session* session )
 	session = nullptr;
 }
 
-struct MessageHeader
-{
-	google::protobuf::uint32 size;
-	MyPacket::MessageType type;
-};
-
-const int MessageHeaderSize = sizeof( MessageHeader );
-
 #define IOCP_WAIT_TIME 20
 
 DWORD g_StartTimer;
@@ -106,10 +99,10 @@ void WriteMessageToStream(
 	const google::protobuf::MessageLite& message,
 	google::protobuf::io::CodedOutputStream& stream )
 {
-	MessageHeader messageHeader;
-	messageHeader.size = message.ByteSize();
-	messageHeader.type = msgType;
-	stream.WriteRaw( &messageHeader, sizeof( MessageHeader ) );
+	PacketHeader messageHeader;
+	messageHeader.mSize = message.ByteSize();
+	messageHeader.mType = msgType;
+	stream.WriteRaw(&messageHeader, sizeof(PacketHeader));
 	message.SerializeToCodedStream( &stream );
 }
 
@@ -126,17 +119,17 @@ void InitSendBufferOnly( Client_Session* clientSession )
 
 void PacketHandler( Client_Session* clientSession )
 {
-	MessageHeader messageHeader;
-	if ( clientSession->mRecvBuffer->GetStoredSize() < MessageHeaderSize )
+	PacketHeader messageHeader;
+	if (clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize)
 		return;
 
 	char* start = clientSession->mRecvBuffer->GetBufferStart();
-	memcpy( &messageHeader, start, MessageHeaderSize );
+	memcpy(&messageHeader, start, PacketHeaderSize);
 	
-	if ( clientSession->mRecvBuffer->GetStoredSize() < MessageHeaderSize + messageHeader.size )
+	if (clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize + messageHeader.mSize)
 		return;
 
-	clientSession->mRecvBuffer->Remove( MessageHeaderSize );
+	clientSession->mRecvBuffer->Remove(PacketHeaderSize);
 
 	const void* pPacket = clientSession->mRecvBuffer->GetBufferStart();
 
@@ -159,12 +152,12 @@ void PacketHandler( Client_Session* clientSession )
 // 			break;
 // 		}
 
-		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.size );
+		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.mSize );
 		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
 
 		//codedInputStream.Skip( messageHeader.size );
 
-		switch ( messageHeader.type )
+		switch ( messageHeader.mType )
 		{
 		case MyPacket::MessageType::PKT_SC_LOGIN:
 		{
@@ -333,7 +326,7 @@ void PacketHandler( Client_Session* clientSession )
 		}
 		}
 
-		clientSession->mRecvBuffer->Remove( messageHeader.size );
+		clientSession->mRecvBuffer->Remove( messageHeader.mSize );
 	}
 }
 
