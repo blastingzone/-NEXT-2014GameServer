@@ -159,13 +159,18 @@ bool Session::FlushSend()
 		return true;
 		//return false;
 
+	char* start = mSendBuffer.GetBufferStart();
+	ULONG len = mSendBuffer.GetContiguiousBytes();
+
+	if (mIsEnCrypt)
+		mCrpyt.RC4Encyrpt((PBYTE)start, len);
 
 	OverlappedSendContext* sendContext = new OverlappedSendContext( this );
 
 	DWORD sendbytes = 0;
 	DWORD flags = 0;
-	sendContext->mWsaBuf.len = (ULONG)mSendBuffer.GetContiguiousBytes();
-	sendContext->mWsaBuf.buf = mSendBuffer.GetBufferStart();
+	sendContext->mWsaBuf.len = len;
+	sendContext->mWsaBuf.buf = start;
 
 	/// start async send
 	if ( SOCKET_ERROR == WSASend( mSocket, &sendContext->mWsaBuf, 1, &sendbytes, flags, (LPWSAOVERLAPPED)sendContext, NULL ) )

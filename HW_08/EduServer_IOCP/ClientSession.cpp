@@ -11,8 +11,6 @@
 #include "Map.h"
 #include "PacketHeader.h"
 
-#define CLIENT_BUFSIZE	65536
-
 ClientSession::ClientSession() : Session(CLIENT_BUFSIZE, CLIENT_BUFSIZE), mPlayer(this)
 {
 	memset(&mClientAddr, 0, sizeof(SOCKADDR_IN));
@@ -187,17 +185,44 @@ void ClientSession::PacketHandler()
 
 	const void* pPacket = mRecvBuffer.GetBufferStart();
 
-	google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.mSize );
-	google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
-
 	switch ( messageHeader.mType )
 	{
 	case MyPacket::MessageType::PKT_CS_CYPT:
 	{
+		mCrpyt.CreatePrivateKey();
+		mCrpyt.ExportPublicKey();
+
+		mCrpyt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
+		mCrpyt.ConvertRC4();
+
+		DWORD len = mCrpyt.GetDataLen();
+		PBYTE data = mCrpyt.GetKeyBlob();
+
+		FastSpinlockGuard criticalSection(mSendBufferLock);
+
+		int totalSize = len + PacketHeaderSize;
+		if (mSendBuffer.GetFreeSpaceSize() < totalSize)
+			break;
+
+		memcpy(mSendBuffer.GetBuffer(), data, len);
+
+		PacketHeader header;
+		header.mSize = len;
+		header.mType = MyPacket::MessageType::PKT_SC_CYPT;
+
+		//나중에 모아서 보냄
+		LSendRequestSessionList->push_back(this);
+		mSendBuffer.Commit(totalSize);
+
+		//3hand shake로 해야함
+		mIsEnCrypt = true;
+
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_LOGIN:
 	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
 		MyPacket::LoginRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
@@ -230,32 +255,23 @@ void ClientSession::PacketHandler()
 		loginResult.mutable_playerpos()->set_y( mPlayer.mPosY );
 		loginResult.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
-		SendRequest(MyPacket::PKT_SC_LOGIN, loginResult);
-
-		/*
-		ProtobufSendbufferRecreate();
-
-		WriteMessageToStream( MyPacket::MessageType::PKT_SC_LOGIN, loginResult, *mCodedOutputStream );
-
-		// CircularBuffer랑 protobuf를 같이 쓰는 방법을 찾아보자
-		// 하하 그런건 없었습니다! ㅠㅠ
-		if ( false == PostSend( (const char*)mSessionBuffer, loginResult.ByteSize() + MessageHeaderSize ) )
-		{
-			printf_s( "PostSend Error! Login Packet Process Fail \n" );
-			break;
-		}
-		*/
+		if(SendRequest(MyPacket::PKT_SC_LOGIN, loginResult))
+			printf_s("SendReauest failed!\n");
 
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_CHAT:
 	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
 		MyPacket::ChatRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
 		
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
+
+		printf_s("Chat!!! %s\n", chat.c_str());
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
 		MyPacket::ChatResult chatPacket;
@@ -271,34 +287,16 @@ void ClientSession::PacketHandler()
 
 		for (auto iter : playerList)
 		{
-			iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket);
+			if(iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket))
+				printf_s("SendReauest failed!\n");
 		}
 
-		/*
-		ProtobufSendbufferRecreate();
-
-		WriteMessageToStream( MyPacket::MessageType::PKT_SC_CHAT, chatPacket, *( mCodedOutputStream ) );
-
-		PlayerPtrList playerList = zone->GetPlayerList();
-
-		for (auto iter : playerList)
-		{
-			google::protobuf::uint8 tempSessionBuffer[256 + MAX_BUFFER_SIZE];
-			memcpy( tempSessionBuffer, mSessionBuffer, chatPacket.ByteSize() + MessageHeaderSize );
-
-			//플레이어 리스트에 있는 세션을 이용하여 send
-			if ( false == iter->mSession->PostSend( (const char*)( tempSessionBuffer ), chatPacket.ByteSize() + MessageHeaderSize ) )
-			{
-				printf_s( "PostSend Error! Chat Packet Process Fail \n" );
-				break;
-			}
-			
-		}
-		*/
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_MOVE:
 	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
 		MyPacket::MoveRequest message;
 		if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 			break;
@@ -315,19 +313,9 @@ void ClientSession::PacketHandler()
 		movePacket.mutable_playerpos()->set_y( mPlayer.mPosY );
 		movePacket.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
-		SendRequest(MyPacket::PKT_SC_MOVE, movePacket);
+		if (SendRequest(MyPacket::PKT_SC_MOVE, movePacket))
+			printf_s("SendReauest failed!\n");
 
-		/*
-		ProtobufSendbufferRecreate();
-
-		WriteMessageToStream(MyPacket::MessageType::PKT_SC_MOVE, movePacket, *mCodedOutputStream);
-
-		if (false == PostSend((const char*)mSessionBuffer, movePacket.ByteSize() + MessageHeaderSize))
-		{
-			printf_s( "PostSend Error! Move Packet Process Fail \n" );
-			break;
-		}
-		*/
 		break;
 	}
 	default:
