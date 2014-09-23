@@ -9,6 +9,7 @@
 #include "Player.h"
 #include "MyPacket.pb.h"
 #include "Map.h"
+#include "PacketHeader.h"
 
 #define CLIENT_BUFSIZE	65536
 
@@ -178,11 +179,11 @@ void ClientSession::OnRelease()
 
 void ClientSession::PacketHandler()
 {
-	MessageHeader messageHeader;
+	PacketHeader messageHeader;
 
 	char* start = mRecvBuffer.GetBufferStart();
-	memcpy( &messageHeader, start, MessageHeaderSize );
-	mRecvBuffer.Remove( MessageHeaderSize );
+	memcpy(&messageHeader, start, PacketHeaderSize);
+	mRecvBuffer.Remove(PacketHeaderSize);
 
 	const void* pPacket = mRecvBuffer.GetBufferStart();
 
@@ -360,7 +361,7 @@ void ClientSession::ProtobufRelease()
 }
 */
 
-bool ClientSession::SendRequest(MyPacket::MessageType packetType, const google::protobuf::MessageLite& payload)
+bool ClientSession::SendRequest(short packetType, const google::protobuf::MessageLite& payload)
 {
 	TRACE_THIS;
 
@@ -369,18 +370,18 @@ bool ClientSession::SendRequest(MyPacket::MessageType packetType, const google::
 
 	FastSpinlockGuard criticalSection(mSendBufferLock);
 
-	int totalSize = payload.ByteSize() + MessageHeaderSize;
+	int totalSize = payload.ByteSize() + PacketHeaderSize;
 	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
 		return false;
 
 	google::protobuf::io::ArrayOutputStream arrayOutputStream(mSendBuffer.GetBuffer(), totalSize);
 	google::protobuf::io::CodedOutputStream codedOutputStream(&arrayOutputStream);
 
-	MessageHeader header;
+	PacketHeader header;
 	header.mSize = payload.ByteSize();
 	header.mType = packetType;
 
-	codedOutputStream.WriteRaw(&header, MessageHeaderSize);
+	codedOutputStream.WriteRaw(&header, PacketHeaderSize);
 	payload.SerializeToCodedStream(&codedOutputStream);
 
 

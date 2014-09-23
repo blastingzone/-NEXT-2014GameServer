@@ -140,6 +140,9 @@
     <ClInclude Include="..\3rdParty\MyPacket.pb.h">
       <Filter>Packet</Filter>
     </ClInclude>
+    <ClInclude Include="..\3rdParty\PacketHeader.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

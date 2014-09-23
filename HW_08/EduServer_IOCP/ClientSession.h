@@ -10,16 +10,6 @@
 
 class ClientSessionManager;
 
-//헤더추가
-
-struct MessageHeader
-{
-	google::protobuf::uint32 mSize;
-	MyPacket::MessageType mType;
-};
-
-const int MessageHeaderSize = sizeof( MessageHeader );
-
 class ClientSession : public Session, public ObjectPool < ClientSession >
 {
 public:
@@ -56,7 +46,7 @@ public:
 	}
 	*/
 
-	bool SendRequest(MyPacket::MessageType packetType, const google::protobuf::MessageLite& payload);
+	bool SendRequest(short packetType, const google::protobuf::MessageLite& payload);
 
 public:
 	Player			mPlayer;
