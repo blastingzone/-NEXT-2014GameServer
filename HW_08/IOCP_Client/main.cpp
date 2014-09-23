@@ -38,7 +38,7 @@ typedef struct
 	CircularBuffer*	mRecvBuffer;
 	google::protobuf::uint8 m_SendBuffer[MAX_BUFFER_SIZE];
 	//google::protobuf::uint8 m_RecvBuffer[MAX_BUFFER_SIZE];
-	
+
 	DWORD m_Flag;
 	int m_SessionId;
 
@@ -54,22 +54,25 @@ typedef struct
 
 std::vector<Client_Session*> g_sessionList;
 
+void DoSpreadChat( Client_Session* clientSession );
+void DoSpreadMove( Client_Session* clientSession );
+
 void deleteClientSession( Client_Session* session )
 {
 
 	closesocket( session->m_Socket );
-// 
-// 	if ( session->m_pInputCodedStream )
-// 	{
-// 		delete session->m_pInputCodedStream;
-// 		session->m_pInputCodedStream = nullptr;
-// 	}
-// 
-// 	if ( session->m_pInputArrayStream )
-// 	{
-// 		delete session->m_pInputArrayStream;
-// 		session->m_pInputArrayStream = nullptr;
-// 	}
+	// 
+	// 	if ( session->m_pInputCodedStream )
+	// 	{
+	// 		delete session->m_pInputCodedStream;
+	// 		session->m_pInputCodedStream = nullptr;
+	// 	}
+	// 
+	// 	if ( session->m_pInputArrayStream )
+	// 	{
+	// 		delete session->m_pInputArrayStream;
+	// 		session->m_pInputArrayStream = nullptr;
+	// 	}
 
 	if ( session->m_pOutputCodedStream )
 	{
@@ -102,7 +105,7 @@ void WriteMessageToStream(
 	PacketHeader messageHeader;
 	messageHeader.mSize = message.ByteSize();
 	messageHeader.mType = msgType;
-	stream.WriteRaw(&messageHeader, sizeof(PacketHeader));
+	stream.WriteRaw( &messageHeader, sizeof( PacketHeader ) );
 	message.SerializeToCodedStream( &stream );
 }
 
@@ -120,37 +123,37 @@ void InitSendBufferOnly( Client_Session* clientSession )
 void PacketHandler( Client_Session* clientSession )
 {
 	PacketHeader messageHeader;
-	if (clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize)
+	if ( clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize )
 		return;
 
 	char* start = clientSession->mRecvBuffer->GetBufferStart();
-	memcpy(&messageHeader, start, PacketHeaderSize);
-	
-	if (clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize + messageHeader.mSize)
+	memcpy( &messageHeader, start, PacketHeaderSize );
+
+	if ( clientSession->mRecvBuffer->GetStoredSize() < PacketHeaderSize + messageHeader.mSize )
 		return;
 
-	clientSession->mRecvBuffer->Remove(PacketHeaderSize);
+	clientSession->mRecvBuffer->Remove( PacketHeaderSize );
 
 	const void* pPacket = clientSession->mRecvBuffer->GetBufferStart();
 
 	//while ( codedInputStream.ReadRaw( &messageHeader, MessageHeaderSize ) )
 	{
-// 		const void* pPacket = NULL;
-// 		int remainSize = 0;
-// 		bool IsOK = false;
-// 		IsOK = codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
-// 
-// 		if ( IsOK == false )
-// 		{
-// 			break;
-// 		}
-// 
-// 		if ( remainSize < (signed)messageHeader.size )
-// 		{
-// 			printf_s( "buffer remain size is lesser than Message! \n" );
-// 
-// 			break;
-// 		}
+		// 		const void* pPacket = NULL;
+		// 		int remainSize = 0;
+		// 		bool IsOK = false;
+		// 		IsOK = codedInputStream.GetDirectBufferPointer( &pPacket, &remainSize );
+		// 
+		// 		if ( IsOK == false )
+		// 		{
+		// 			break;
+		// 		}
+		// 
+		// 		if ( remainSize < (signed)messageHeader.size )
+		// 		{
+		// 			printf_s( "buffer remain size is lesser than Message! \n" );
+		// 
+		// 			break;
+		// 		}
 
 		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.mSize );
 		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
@@ -164,7 +167,7 @@ void PacketHandler( Client_Session* clientSession )
 			MyPacket::LoginResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
-			
+
 			//codedInputStream.ConsumedEntireMessage();
 
 			printf( "Login Success ! Player Id : %d Session Id : %d \n", message.playerid(), clientSession->m_SessionId );
@@ -176,61 +179,28 @@ void PacketHandler( Client_Session* clientSession )
 			clientSession->m_Position.posZ = message.playerpos().z();
 
 			// 로그인 성공하면 채팅을 보내기 시작
-
-			MyPacket::ChatRequest chatPacket;
-			std::string chat( "chatting!" );
-			chat.append( "session id : " );
-			chat.append( std::to_string(clientSession->m_SessionId) );
-
-			chatPacket.set_playerid( clientSession->m_SessionId );
-			chatPacket.set_playermessage(chat.c_str());
-
-			// 주의 : 본래 여기서 send buffer를 비우면 안 된다.
-			// recv 로직 중에 send 버퍼를 비워버리면 실제 send가 비동기로 잘 돌아가는 도중에 먹는거 뺏아가는 수가 있음;;
-			// but 이 클라이언트는 하는 일이 간단해서 통제가 가능하다. 여기로 들어왔다는건 send가 끝났다는 게 보장된다.
-			InitSendBufferOnly( clientSession );
-
-			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *(clientSession->m_pOutputCodedStream) );
-
-			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
-			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
-
-			DWORD sendByte = 0;
-
-			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
-			{
-				if ( WSAGetLastError() != WSA_IO_PENDING )
-				{
-					deleteClientSession( clientSession );
-					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
-				}
-			}
-			else
-			{
-				clientSession->m_TotalSendSize += sendByte;
-				printf_s( " Chat Data Send OK \n" );
-			}
+			DoSpreadChat( clientSession );
 
 			break;
 		}
-		//서버에 only 에코 기능만 있을 때 테스트용
-// 		case MyPacket::MessageType::PKT_CS_LOGIN:
-// 		{
-// 			MyPacket::LoginRequest message;
-// 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
-// 				break;
-// 
-// 			//codedInputStream.ConsumedEntireMessage();
-// 
-// 			printf("Player Id : %d \n", message.playerid());
-// 			break;
-// 		}
+			//서버에 only 에코 기능만 있을 때 테스트용
+			// 		case MyPacket::MessageType::PKT_CS_LOGIN:
+			// 		{
+			// 			MyPacket::LoginRequest message;
+			// 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
+			// 				break;
+			// 
+			// 			//codedInputStream.ConsumedEntireMessage();
+			// 
+			// 			printf("Player Id : %d \n", message.playerid());
+			// 			break;
+			// 		}
 		case MyPacket::MessageType::PKT_SC_CHAT:
 		{
 			MyPacket::ChatResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
-			
+
 			//	printf_s( "%d \n", message.ByteSize() );
 
 			//codedInputStream.ConsumedEntireMessage();
@@ -238,41 +208,8 @@ void PacketHandler( Client_Session* clientSession )
 			printf_s( "[CHAT] [from %s] : %s \n", message.playername(), message.playermessage().c_str() );
 
 			// 채팅 성공하면 이동을 보내기 시작
+			DoSpreadMove( clientSession );
 
-			clientSession->m_Position.posX = ( clientSession->m_Position.posX + 1.0f );
-			clientSession->m_Position.posY = ( 0.0f );
-			clientSession->m_Position.posZ = ( clientSession->m_Position.posZ + 1.0f );
-
-			MyPacket::MoveRequest movePacket;
-			movePacket.set_playerid( clientSession->m_SessionId );
-
-			movePacket.mutable_playerpos()->set_x( clientSession->m_Position.posX );
-			movePacket.mutable_playerpos()->set_y( clientSession->m_Position.posY );
-			movePacket.mutable_playerpos()->set_z( clientSession->m_Position.posZ );
-
-			InitSendBufferOnly( clientSession );
-
-			WriteMessageToStream( MyPacket::MessageType::PKT_CS_MOVE, movePacket, *( clientSession->m_pOutputCodedStream ) );
-
-			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
-			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
-			DWORD sendByte;
-
-			Sleep( 100 );
-
-			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
-			{
-				if ( WSAGetLastError() != WSA_IO_PENDING )
-				{
-					deleteClientSession( clientSession );
-					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
-				}
-			}
-			else
-			{
-				clientSession->m_TotalSendSize += sendByte;
-				printf_s( " Move Data Send OK \n" );
-			}
 			break;
 		}
 		case MyPacket::MessageType::PKT_SC_MOVE:
@@ -287,46 +224,13 @@ void PacketHandler( Client_Session* clientSession )
 
 			// 이동 성공하면 채팅을 보내기 시작
 
-			MyPacket::ChatRequest chatPacket;
-			std::string chat( "chatting!" );
-			chat.append( "session id : " );
-			chat.append( std::to_string( clientSession->m_SessionId ) );
-
-			chatPacket.set_playerid( clientSession->m_SessionId );
-			chatPacket.set_playermessage( chat.c_str() );
-
-			// 주의 : 본래 여기서 send buffer를 비우면 안 된다.
-			// recv 로직 중에 send 버퍼를 비워버리면 실제 send가 비동기로 잘 돌아가는 도중에 먹는거 뺏아가는 수가 있음;;
-			// but 이 클라이언트는 하는 일이 간단해서 통제가 가능하다. 여기로 들어왔다는건 send가 끝났다는 게 보장된다.
-			InitSendBufferOnly( clientSession );
-
-			WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *( clientSession->m_pOutputCodedStream ) );
-
-			clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
-			clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
-			DWORD sendByte;
-
-			Sleep( 100 );
-
-			if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
-			{
-				if ( WSAGetLastError() != WSA_IO_PENDING )
-				{
-					deleteClientSession( clientSession );
-					printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
-				}
-			}
-			else
-			{
-				clientSession->m_TotalSendSize += sendByte;
-				printf_s( " Chat Data Send OK \n" );
-			}
+			DoSpreadChat( clientSession );
 
 			break;
 		}
-		}
 
-		clientSession->mRecvBuffer->Remove( messageHeader.mSize );
+			clientSession->mRecvBuffer->Remove( messageHeader.mSize );
+		}
 	}
 }
 
@@ -377,20 +281,86 @@ static unsigned int WINAPI ClientWorkerThread( LPVOID lpParameter )
 	return 0;
 }
 
-void DoSpreadChat()
+void DoSpreadChat( Client_Session* clientSession )
 {
-	
+	MyPacket::ChatRequest chatPacket;
+	std::string chat( "chatting!" );
+	chat.append( "session id : " );
+	chat.append( std::to_string( clientSession->m_SessionId ) );
+
+	chatPacket.set_playerid( clientSession->m_SessionId );
+	chatPacket.set_playermessage( chat.c_str() );
+
+	InitSendBufferOnly( clientSession );
+
+	WriteMessageToStream( MyPacket::MessageType::PKT_CS_CHAT, chatPacket, *( clientSession->m_pOutputCodedStream ) );
+
+	clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
+	clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
+	DWORD sendByte;
+
+	if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+	{
+		if ( WSAGetLastError() != WSA_IO_PENDING )
+		{
+			deleteClientSession( clientSession );
+			printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
+		}
+	}
+	else
+	{
+		clientSession->m_TotalSendSize += sendByte;
+		printf_s( " Chat Data Send OK [id][%d] \n", clientSession->m_SessionId );
+	}
 }
 
-void DoSpreadMove()
+void DoSpreadMove( Client_Session* clientSession )
 {
+	clientSession->m_Position.posX = ( clientSession->m_Position.posX + 1.0f );
+	clientSession->m_Position.posY = ( 0.0f );
+	clientSession->m_Position.posZ = ( clientSession->m_Position.posZ + 1.0f );
 
+	MyPacket::MoveRequest movePacket;
+	movePacket.set_playerid( clientSession->m_SessionId );
+
+	movePacket.mutable_playerpos()->set_x( clientSession->m_Position.posX );
+	movePacket.mutable_playerpos()->set_y( clientSession->m_Position.posY );
+	movePacket.mutable_playerpos()->set_z( clientSession->m_Position.posZ );
+
+	InitSendBufferOnly( clientSession );
+
+	WriteMessageToStream( MyPacket::MessageType::PKT_CS_MOVE, movePacket, *( clientSession->m_pOutputCodedStream ) );
+
+	clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
+	clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
+	DWORD sendByte;
+
+	if ( SOCKET_ERROR == WSASend( clientSession->m_Socket, &clientSession->m_WsaSendBuf, 1, &sendByte, clientSession->m_Flag, (LPWSAOVERLAPPED)clientSession, NULL ) )
+	{
+		if ( WSAGetLastError() != WSA_IO_PENDING )
+		{
+			deleteClientSession( clientSession );
+			printf_s( "MyPacket::MessageType::PKT_SC_LOGIN Handling Error : %d\n", GetLastError() );
+		}
+	}
+	else
+	{
+		clientSession->m_TotalSendSize += sendByte;
+		printf_s( " Move Data Send OK : [id][%d] \n", clientSession->m_SessionId );
+	}
 }
 
 void DoIntervalJob()
 {
-	DoSpreadChat();
-	DoSpreadMove();
+	for ( int i = 0; i < g_sessionList.size(); ++i )
+	{
+		DoSpreadChat( g_sessionList[i] );
+	}
+
+	for ( int i = 0; i < g_sessionList.size(); ++i )
+	{
+		DoSpreadMove( g_sessionList[i] );
+	}
 }
 
 int main( void )
@@ -414,7 +384,7 @@ int main( void )
 	{
 		Client_Session* clientSession = new Client_Session();
 		ZeroMemory( clientSession, sizeof( Client_Session ) );
-		
+
 		clientSession->mRecvBuffer = new CircularBuffer( MAX_BUFFER_SIZE );
 
 		clientSession->m_Socket = WSASocket( AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED );
@@ -451,21 +421,21 @@ int main( void )
 		// 출력 / 입력 스트림 생성
 		clientSession->m_pOutputArrayStream = new google::protobuf::io::ArrayOutputStream( clientSession->m_SendBuffer, MAX_BUFFER_SIZE );
 		clientSession->m_pOutputCodedStream = new google::protobuf::io::CodedOutputStream( clientSession->m_pOutputArrayStream );
-		
+
 		// 로그인 패킷 보내기
 		MyPacket::LoginRequest loginPacket;
 		loginPacket.set_playerid( clientSession->m_SessionId );
 
-		WriteMessageToStream( MyPacket::MessageType::PKT_CS_LOGIN, loginPacket, *(clientSession->m_pOutputCodedStream) );
+		WriteMessageToStream( MyPacket::MessageType::PKT_CS_LOGIN, loginPacket, *( clientSession->m_pOutputCodedStream ) );
 
 		// send 버퍼에 글자 채우기(old)
-// 		for ( int j = 0; j < TOTAL_MESSAGE_BYTE / MAX_CONNECTION; ++j )
-// 		{
-// 			clientSession->m_SendBuffer[j] = clientSession->m_SessionId;
-// 		}
-// 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
+		// 		for ( int j = 0; j < TOTAL_MESSAGE_BYTE / MAX_CONNECTION; ++j )
+		// 		{
+		// 			clientSession->m_SendBuffer[j] = clientSession->m_SessionId;
+		// 		}
+		// 		clientSession->m_SendBuffer[TOTAL_MESSAGE_BYTE / MAX_CONNECTION - 1] = '\0';
 
-		clientSession->m_WsaSendBuf.buf = (CHAR*)(clientSession->m_SendBuffer);
+		clientSession->m_WsaSendBuf.buf = (CHAR*)( clientSession->m_SendBuffer );
 		clientSession->m_WsaSendBuf.len = clientSession->m_pOutputCodedStream->ByteCount();
 
 		clientSession->m_WsaRecvBuf.buf = clientSession->mRecvBuffer->GetBuffer();
@@ -506,6 +476,10 @@ int main( void )
 		Sleep( 1000 );
 		DoIntervalJob();
 	}
+
+	// 마지막으로 서버에서 오는 데이터 정리할 시간 잠깐 준다
+	printf_s( "2초 뒤 클라 폭파!\n" );
+	Sleep( 2000 );
 
 	for ( int i = 0; i < g_sessionList.size(); ++i )
 	{
