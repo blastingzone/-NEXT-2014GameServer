@@ -38,11 +38,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (false == GIocpManager->Initialize())
 		return -1;
 
-	if (false == GDatabaseManager->Initialize())
-		return -1;
-
-	if (false == GDatabaseManager->StartDatabaseThreads())
-		return -1;
+// 	if (false == GDatabaseManager->Initialize())
+// 		return -1;
+// 
+// 	if (false == GDatabaseManager->StartDatabaseThreads())
+// 		return -1;
 
 	if (false == GIocpManager->StartIoThreads())
 		return -1;
@@ -53,7 +53,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	GIocpManager->StartAccept(); ///< block here...
 
 
-	GDatabaseManager->Finalize();
+	//GDatabaseManager->Finalize();
 	GIocpManager->Finalize();
 
 	printf_s("End Server\n");

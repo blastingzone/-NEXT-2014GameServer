@@ -303,7 +303,7 @@ void ClientSession::PacketHandler()
 		mPlayer.SetZone();
 		//이동처리가 완료됨을 알리는 패킷
 		
-		printf_s("Player pos : %f, %f", mPlayer.mPosX, mPlayer.mPosZ);
+		printf_s("Player pos : %f, %f \n", mPlayer.mPosX, mPlayer.mPosZ);
 
 		MyPacket::MoveResult movePacket;
 
