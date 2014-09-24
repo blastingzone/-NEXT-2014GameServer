@@ -20,7 +20,7 @@ Session::Session(size_t sendBufSize, size_t recvBufSize)
 
 void Session::DisconnectRequest(DisconnectReason dr)
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	/// ÀÌ¹Ì ²÷°å°Å³ª ²÷±â´Â ÁßÀÌ°Å³ª
 	if (0 == InterlockedExchange(&mConnected, 0))
@@ -42,7 +42,7 @@ void Session::DisconnectRequest(DisconnectReason dr)
 
 bool Session::PreRecv()
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	if (!IsConnected())
 		return false;
@@ -70,7 +70,7 @@ bool Session::PreRecv()
 
 bool Session::PostRecv()
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	if (!IsConnected())
 		return false;
@@ -104,7 +104,7 @@ bool Session::PostRecv()
 
 bool Session::PostSend(const char* data, size_t len)
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	if (!IsConnected())
 		return false;
@@ -129,7 +129,7 @@ bool Session::PostSend(const char* data, size_t len)
 
 bool Session::FlushSend()
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	if (!IsConnected())
 	{
@@ -188,7 +188,7 @@ bool Session::FlushSend()
 
 void Session::DisconnectCompletion(DisconnectReason dr)
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	OnDisconnect(dr);
 
@@ -199,7 +199,7 @@ void Session::DisconnectCompletion(DisconnectReason dr)
 
 void Session::SendCompletion(DWORD transferred)
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	FastSpinlockGuard criticalSection(mSendBufferLock);
 
@@ -212,7 +212,7 @@ void Session::SendCompletion(DWORD transferred)
 
 void Session::RecvCompletion(DWORD transferred)
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	if (mIsEnCrypt)
 		mCrypt.RC4Decrypt((PBYTE)mRecvBuffer.GetBuffer(), transferred);
@@ -240,7 +240,7 @@ void Session::ReleaseRef()
 
 void Session::EchoBack()
 {
-	TRACE_THIS;
+	//TRACE_THIS;
 
 	size_t len = mRecvBuffer.GetContiguiousBytes();
 
