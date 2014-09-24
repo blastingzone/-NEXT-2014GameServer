@@ -109,10 +109,7 @@ bool IOThread::DoIocpJob()
 	case IO_RECV:
 		remote->RecvCompletion(dwTransferred);
 
-		/// for test
-		//remote->EchoBack();
-		// 여기에 패킷처리 들어간다!!
-		//dynamic_cast<ClientSession*>(remote)->PacketHandler();
+		dynamic_cast<DummyClientSession*>(remote)->PacketHandler();
 
 		completionOk = remote->PreRecv();
 

@@ -88,7 +88,7 @@ bool IocpManager::Initialize()
 bool IocpManager::StartIoThreads()
 {
 	/// create I/O Thread
-	for (int i = 0; i < MAX_IO_THREAD; ++i)
+	for (int i = 0; i < mIoThreadCount; ++i)
 	{
 		DWORD dwThreadId;
 		/// 스레드ID는 DB 스레드 이후에 IO 스레드로..
@@ -100,7 +100,7 @@ bool IocpManager::StartIoThreads()
 	}
 
 	/// start!
-	for (int i = 0; i < MAX_IO_THREAD; ++i)
+	for (int i = 0; i < mIoThreadCount; ++i)
 	{
 		ResumeThread(mIoWorkerThread[i]->GetHandle());
 	}
@@ -128,7 +128,7 @@ void IocpManager::StopIoThreads()
 
 void IocpManager::Finalize()
 {
-	for (int i = 0; i < MAX_IO_THREAD; ++i)
+	for (int i = 0; i < mIoThreadCount; ++i)
 	{
 		CloseHandle(mIoWorkerThread[i]->GetHandle());
 	}

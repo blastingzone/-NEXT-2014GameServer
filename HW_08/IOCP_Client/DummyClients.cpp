@@ -7,22 +7,12 @@
 #include "DummyClientSession.h"
 #include "SessionManager.h"
 #include "IocpManager.h"
+#include "MemoryPool.h"
 
 /// config values
 int MAX_CONNECTION = 1000;
 char CONNECT_ADDR[32] = "127.0.0.1";
 unsigned short CONNECT_PORT = 9000;
-
-
-char* GetCommandOption(char** begin, char** end, const std::string& comparand)
-{
-	char** itr = std::find(begin, end, comparand);
-	if (itr != end && ++itr != end)
-		return *itr;
-
-	return nullptr;
-}
-
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -32,9 +22,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	SetUnhandledExceptionFilter(ExceptionFilter);
 
 	/// Global Managers
+	GMemoryPool = new MemoryPool;
 	GSessionManager = new SessionManager;
 	GIocpManager = new IocpManager;
-
 
 	if (false == GIocpManager->Initialize())
 		return -1;
@@ -61,9 +51,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	GIocpManager->Finalize();
 
-
 	delete GIocpManager;
 	delete GSessionManager;
+	delete GMemoryPool;
 
 	return 0;
 }

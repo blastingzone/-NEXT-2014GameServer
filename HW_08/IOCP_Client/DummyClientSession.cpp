@@ -11,6 +11,8 @@
 #include "PacketHeader.h"
 #include "MyPacket.pb.h"
 
+#include <time.h>
+
 #define CLIENT_BUFSIZE	65536
 
 DummyClientSession::DummyClientSession() : Session(CLIENT_BUFSIZE, CLIENT_BUFSIZE)
@@ -184,9 +186,57 @@ void DummyClientSession::PacketHandler()
 	switch (messageHeader.mType)
 	{
 	case MyPacket::MessageType::PKT_SC_CYPT:
+	{
+		mIsEnCrypt = true;
+		//timer를 달아뒀으니 시간나면 쓰도록하자
+		Login();
+		break;
+	}
 	case MyPacket::MessageType::PKT_SC_LOGIN:
+	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+		MyPacket::LoginResult message;
+		if (false == message.ParseFromCodedStream(&payloadInputStream))
+			break;
+
+		payloadInputStream.ConsumedEntireMessage();
+
+		printf_s("Login Success! id : %d\n", message.playerid());
+
+		Move(message.playerid());
+		break;
+	}
 	case MyPacket::MessageType::PKT_SC_CHAT:
+	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+		MyPacket::ChatResult message;
+		if (false == message.ParseFromCodedStream(&payloadInputStream))
+			break;
+
+		printf_s("Chat is comming! : %s", message.playermessage().c_str());
+
+		break;
+	}
 	case MyPacket::MessageType::PKT_SC_MOVE:
+	{
+		google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+		google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+		MyPacket::MoveResult message;
+		if (false == message.ParseFromCodedStream(&payloadInputStream))
+			break;
+
+		printf_s("moving! : %f, %f, %f", message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
+
+		//마찬가지로 타이머를 사용하자
+		Sleep(100);
+
+		Move(message.playerid());
+		Chat(message.playerid());
+
+		break;
+	}
 
 	default:
 	{
@@ -197,5 +247,57 @@ void DummyClientSession::PacketHandler()
 	}
 
 	mRecvBuffer.Remove(messageHeader.mSize);
+}
+
+void DummyClientSession::ExportKey()
+{
+	mCrypt.CreatePrivateKey();
+	mCrypt.ExportPublicKey();
+
+	DWORD len = mCrypt.GetDataLen();
+	PBYTE data = mCrypt.GetKeyBlob();
+
+	FastSpinlockGuard criticalSection(mSendBufferLock);
+
+	int totalSize = len + PacketHeaderSize;
+	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
+		return;
+
+	memcpy(mSendBuffer.GetBuffer(), data, len);
+
+	PacketHeader header;
+	header.mSize = len;
+	header.mType = MyPacket::MessageType::PKT_CS_CYPT;
+
+	//나중에 모아서 보냄
+	LSendRequestSessionList->push_back(this);
+	mSendBuffer.Commit(totalSize);
+}
+
+void DummyClientSession::Chat(int id)
+{
+	MyPacket::ChatRequest chatRequest;
+
+	std::string chat("chatting!");
+
+	chatRequest.set_playerid(id);
+	chatRequest.set_playermessage(chat.c_str());
+
+	SendRequest(MyPacket::PKT_CS_CHAT, chatRequest);
+}
+
+void DummyClientSession::Move(int id)
+{
+	MyPacket::MoveRequest moveRequest;
+
+	//나중에 std::rand한번 써보자
+	srand(time(NULL));
+
+	moveRequest.set_playerid(id);
+	moveRequest.mutable_playerpos()->set_x(rand()%1000);
+	moveRequest.mutable_playerpos()->set_y(rand()%1000);
+	moveRequest.mutable_playerpos()->set_z(rand()%1000);
+
+	SendRequest(MyPacket::PKT_CS_MOVE, moveRequest);
 }
 

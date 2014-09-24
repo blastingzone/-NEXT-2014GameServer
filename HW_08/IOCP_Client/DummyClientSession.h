@@ -21,7 +21,10 @@ public:
 
 	void PacketHandler();
 
+	void ExportKey();
 	void Login();
+	void Chat(int id);
+	void Move(int id);
 
 private:
 	

@@ -1,6 +1,6 @@
 #pragma once
 
-#define GQCS_TIMEOUT	10 //INFINITE
+#define GQCS_TIMEOUT 10
 
 
 extern int MAX_CONNECTION;
