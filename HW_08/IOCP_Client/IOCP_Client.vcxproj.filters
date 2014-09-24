@@ -27,6 +27,9 @@
     <ClCompile Include="..\3rdParty\MyPacket.pb.cc">
       <Filter>Packet</Filter>
     </ClCompile>
+    <ClCompile Include="Crypt.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CircularBuffer.h">
@@ -40,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="..\3rdParty\PacketHeader.h">
       <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypt.h">
+      <Filter>소스 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

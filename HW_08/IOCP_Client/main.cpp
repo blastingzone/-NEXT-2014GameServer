@@ -10,6 +10,7 @@
 #include "google/protobuf/io/zero_copy_stream_impl_lite.h"
 #include "google/protobuf/text_format.h"
 #include "PacketHeader.h"
+#include "Crypt.h"
 
 #pragma comment(lib, "ws2_32.lib") 
 
@@ -49,6 +50,10 @@ typedef struct
 
 	google::protobuf::io::ArrayOutputStream* m_pOutputArrayStream;
 	google::protobuf::io::CodedOutputStream* m_pOutputCodedStream;
+
+	Crypt	m_Crypt;
+	//초기 상태 false로 해야함
+	bool	m_IsEnCrypt;
 
 } Client_Session;
 
@@ -155,15 +160,26 @@ void PacketHandler( Client_Session* clientSession )
 		// 			break;
 		// 		}
 
-		google::protobuf::io::ArrayInputStream payloadArrayStream( pPacket, messageHeader.mSize );
-		google::protobuf::io::CodedInputStream payloadInputStream( &payloadArrayStream );
-
 		//codedInputStream.Skip( messageHeader.size );
 
 		switch ( messageHeader.mType )
 		{
+		case MyPacket::MessageType::PKT_SC_CYPT:
+		{
+			clientSession->m_Crypt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
+			clientSession->m_Crypt.ConvertRC4();
+
+			clientSession->m_IsEnCrypt = true;
+
+			//이후 최초 로그인 페킷을 발사
+
+			break;
+		}
 		case MyPacket::MessageType::PKT_SC_LOGIN:
 		{
+			google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+			google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+
 			MyPacket::LoginResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
@@ -197,6 +213,9 @@ void PacketHandler( Client_Session* clientSession )
 			// 		}
 		case MyPacket::MessageType::PKT_SC_CHAT:
 		{
+			google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+			google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+
 			MyPacket::ChatResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
@@ -214,6 +233,9 @@ void PacketHandler( Client_Session* clientSession )
 		}
 		case MyPacket::MessageType::PKT_SC_MOVE:
 		{
+			google::protobuf::io::ArrayInputStream payloadArrayStream(pPacket, messageHeader.mSize);
+			google::protobuf::io::CodedInputStream payloadInputStream(&payloadArrayStream);
+
 			MyPacket::MoveResult message;
 			if ( false == message.ParseFromCodedStream( &payloadInputStream ) )
 				break;
