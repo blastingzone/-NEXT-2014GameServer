@@ -33,7 +33,19 @@
     <ClCompile Include="Crypt.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="DummyClients.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="FastSpinlock.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="LockOrderChecker.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadLocal.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Exception.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +65,19 @@
     <ClInclude Include="Crypt.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="DummyClients.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
     <ClInclude Include="FastSpinlock.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Exception.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="LockOrderChecker.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadLocal.h">
       <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>

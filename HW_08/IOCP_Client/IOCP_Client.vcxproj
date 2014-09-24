@@ -135,16 +135,24 @@
     <ClCompile Include="..\3rdParty\MyPacket.pb.cc" />
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="Crypt.cpp" />
+    <ClCompile Include="DummyClients.cpp" />
+    <ClCompile Include="Exception.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
+    <ClCompile Include="LockOrderChecker.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ThreadLocal.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\MyPacket.pb.h" />
     <ClInclude Include="..\3rdParty\PacketHeader.h" />
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="Crypt.h" />
+    <ClInclude Include="DummyClients.h" />
+    <ClInclude Include="Exception.h" />
     <ClInclude Include="FastSpinlock.h" />
+    <ClInclude Include="LockOrderChecker.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="ThreadLocal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
