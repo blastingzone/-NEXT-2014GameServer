@@ -16,25 +16,28 @@
     <Filter Include="Packet">
       <UniqueIdentifier>{fde98dff-06ef-412d-b9de-b973d7c9140a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{43e8af57-8dd8-4216-8003-c6550685d2ab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CircularBuffer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\3rdParty\MyPacket.pb.cc">
       <Filter>Packet</Filter>
     </ClCompile>
+    <ClCompile Include="CircularBuffer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
     <ClCompile Include="Crypt.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="FastSpinlock.cpp">
+      <Filter>Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CircularBuffer.h">
-      <Filter>소스 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\3rdParty\MyPacket.pb.h">
       <Filter>Packet</Filter>
     </ClInclude>
@@ -44,8 +47,14 @@
     <ClInclude Include="..\3rdParty\PacketHeader.h">
       <Filter>Packet</Filter>
     </ClInclude>
+    <ClInclude Include="CircularBuffer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
     <ClInclude Include="Crypt.h">
-      <Filter>소스 파일</Filter>
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FastSpinlock.h">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
