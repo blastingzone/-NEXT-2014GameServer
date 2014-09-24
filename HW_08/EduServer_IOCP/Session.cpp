@@ -216,6 +216,9 @@ void Session::RecvCompletion( DWORD transferred )
 {
 	TRACE_THIS;
 
+	if (mIsEnCrypt)
+		mCrypt.RC4Decrypt((PBYTE)mRecvBuffer.GetBuffer(), transferred);
+
 	mRecvBuffer.Commit( transferred );
 }
 
