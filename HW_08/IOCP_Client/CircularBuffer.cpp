@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CircularBuffer.h"
 #include <assert.h>
 

@@ -1,4 +1,6 @@
-﻿
+﻿#include "stdafx.h"
+
+/*
 #include <winsock2.h>
 #include <stdio.h>
 #include <vector>
@@ -538,3 +540,4 @@ int main( void )
 	getchar();
 	return 0;
 }
+*/

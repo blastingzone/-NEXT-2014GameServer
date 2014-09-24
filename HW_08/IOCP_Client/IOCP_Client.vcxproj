@@ -95,6 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -123,6 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(ProjectDir);</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,11 +138,20 @@
     <ClCompile Include="CircularBuffer.cpp" />
     <ClCompile Include="Crypt.cpp" />
     <ClCompile Include="DummyClients.cpp" />
+    <ClCompile Include="DummyClientSession.cpp" />
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="FastSpinlock.cpp" />
+    <ClCompile Include="IocpManager.cpp" />
+    <ClCompile Include="IOThread.cpp" />
     <ClCompile Include="LockOrderChecker.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MemoryPool.cpp" />
+    <ClCompile Include="OverlappedIOContext.cpp" />
+    <ClCompile Include="Session.cpp" />
+    <ClCompile Include="SessionManager.cpp" />
     <ClCompile Include="ThreadLocal.cpp" />
+    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\MyPacket.pb.h" />
@@ -148,11 +159,25 @@
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="Crypt.h" />
     <ClInclude Include="DummyClients.h" />
+    <ClInclude Include="DummyClientSession.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="FastSpinlock.h" />
+    <ClInclude Include="IocpManager.h" />
+    <ClInclude Include="IOThread.h" />
     <ClInclude Include="LockOrderChecker.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="ObjectPool.h" />
+    <ClInclude Include="OverlappedIOContext.h" />
+    <ClInclude Include="Session.h" />
+    <ClInclude Include="SessionManager.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SyncExecutable.h" />
+    <ClInclude Include="targetver.h" />
     <ClInclude Include="ThreadLocal.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="TypeTraits.h" />
+    <ClInclude Include="XTL.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
