@@ -146,12 +146,18 @@ void IOThread::DoSendJob()
 	while (!LSendRequestSessionList->empty())
 	{
 		auto& session = LSendRequestSessionList->front();
+		LSendRequestSessionList->pop_front();
 
-		if (session->FlushSend())
+		if (!session->FlushSend())
 		{
-			/// true 리턴 되면 빼버린다.
-			LSendRequestSessionList->pop_front();
+			//실패했을 경우 FailedSessionList에 수집
+			LSendRequestFailedSessionList->push_back(session);
 		}
 	}
 
+	//큐를 스왑
+	//이부분은 덕철형의 아이디어를 이용
+	std::deque<Session*>* tempDeq = LSendRequestSessionList;
+	LSendRequestSessionList = LSendRequestFailedSessionList;
+	LSendRequestFailedSessionList = tempDeq;
 }

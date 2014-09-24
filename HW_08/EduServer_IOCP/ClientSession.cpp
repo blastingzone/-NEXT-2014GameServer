@@ -34,9 +34,6 @@ void ClientSession::SessionReset()
 	mSendBuffer.BufferReset();
 	mSendBufferLock.LeaveWriteLock();
 
-	//ProtobufRelease();
-	//ProtobufInit();
-
 	LINGER lingerOption;
 	lingerOption.l_onoff = 1;
 	lingerOption.l_linger = 0;
@@ -52,7 +49,6 @@ void ClientSession::SessionReset()
 
 	mPlayer.PlayerReset();
 	mCrpyt.Release();
-	//mDecryptedPacketBuffer.BufferReset();
 }
 
 bool ClientSession::PostAccept()
@@ -255,7 +251,7 @@ void ClientSession::PacketHandler()
 		loginResult.mutable_playerpos()->set_y( mPlayer.mPosY );
 		loginResult.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
-		if(SendRequest(MyPacket::PKT_SC_LOGIN, loginResult))
+		if(!SendRequest(MyPacket::PKT_SC_LOGIN, loginResult))
 			printf_s("SendReauest failed!\n");
 
 		break;
@@ -271,7 +267,7 @@ void ClientSession::PacketHandler()
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
-		printf_s("Chat!!! %s\n", chat.c_str());
+		//printf_s("Chat!!! %s\n", chat.c_str());
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
 		MyPacket::ChatResult chatPacket;
@@ -279,15 +275,16 @@ void ClientSession::PacketHandler()
 		chat.append( "server to client : chat from id : " );
 		chat.append( std::to_string( mPlayer.GetPlayerId() ) );
 		chat.append( "\n" );
-		//chat.append("아이디는 %d", mPlayer.GetPlayerId());
 		chatPacket.set_playermessage( chat.c_str() );
 		chatPacket.set_playername( "kim" ); //모조리 김씨
 
 		PlayerPtrList playerList = zone->GetPlayerList();
 
+		int i = 0;
 		for (auto iter : playerList)
 		{
-			if(iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket))
+			//printf_s("iteration count : %d\n", ++i);
+			if(!(iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket)))
 				printf_s("SendReauest failed!\n");
 		}
 
@@ -305,6 +302,8 @@ void ClientSession::PacketHandler()
 		mPlayer.SetPosition( message.playerpos().x(), message.playerpos().z() );
 		mPlayer.SetZone();
 		//이동처리가 완료됨을 알리는 패킷
+		
+		printf_s("Player pos : %f, %f", mPlayer.mPosX, mPlayer.mPosZ);
 
 		MyPacket::MoveResult movePacket;
 
@@ -313,7 +312,7 @@ void ClientSession::PacketHandler()
 		movePacket.mutable_playerpos()->set_y( mPlayer.mPosY );
 		movePacket.mutable_playerpos()->set_z( mPlayer.mPosZ );
 
-		if (SendRequest(MyPacket::PKT_SC_MOVE, movePacket))
+		if (!SendRequest(MyPacket::PKT_SC_MOVE, movePacket))
 			printf_s("SendReauest failed!\n");
 
 		break;
@@ -329,48 +328,24 @@ void ClientSession::PacketHandler()
 	mRecvBuffer.Remove( messageHeader.mSize );
 }
 
-/*
-void ClientSession::ProtobufInit()
-{
-	mArrayOutputStream = new google::protobuf::io::ArrayOutputStream(mSessionBuffer, MAX_BUFFER_SIZE);
-	mCodedOutputStream = new google::protobuf::io::CodedOutputStream( mArrayOutputStream );
-}
-
-
-void ClientSession::ProtobufSendbufferRecreate()
-{
-	ProtobufRelease();
-	ProtobufInit();
-}
-
-void ClientSession::ProtobufRelease()
-{
-	if ( mCodedOutputStream )
-	{
-		delete mCodedOutputStream;
-		mCodedOutputStream = nullptr;
-	}
-
-	if ( mArrayOutputStream )
-	{
-		delete mArrayOutputStream;
-		mArrayOutputStream = nullptr;
-	}
-}
-*/
-
 bool ClientSession::SendRequest(short packetType, const google::protobuf::MessageLite& payload)
 {
 	TRACE_THIS;
 
-	if (!IsConnected())
+	if (!IsConnected()) {
+		printf_s("IsConnected Error in SendRequest\n");
 		return false;
+	}
+		
 
 	FastSpinlockGuard criticalSection(mSendBufferLock);
 
 	int totalSize = payload.ByteSize() + PacketHeaderSize;
-	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
+	if (mSendBuffer.GetFreeSpaceSize() < totalSize) {
+		printf_s("BufferError in SendRequest\n");
 		return false;
+	}
+		
 
 	google::protobuf::io::ArrayOutputStream arrayOutputStream(mSendBuffer.GetBuffer(), totalSize);
 	google::protobuf::io::CodedOutputStream codedOutputStream(&arrayOutputStream);
