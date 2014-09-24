@@ -162,7 +162,7 @@ bool Session::FlushSend()
 	ULONG len = mSendBuffer.GetContiguiousBytes();
 
 	if (mIsEnCrypt)
-		mCrpyt.RC4Encyrpt((PBYTE)start, len);
+		mCrypt.RC4Encyrpt((PBYTE)start, len);
 
 	OverlappedSendContext* sendContext = new OverlappedSendContext( this );
 

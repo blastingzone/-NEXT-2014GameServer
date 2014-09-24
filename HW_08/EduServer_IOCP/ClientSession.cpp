@@ -48,7 +48,7 @@ void ClientSession::SessionReset()
 	mSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 	mPlayer.PlayerReset();
-	mCrpyt.Release();
+	mCrypt.Release();
 }
 
 bool ClientSession::PostAccept()
@@ -185,14 +185,14 @@ void ClientSession::PacketHandler()
 	{
 	case MyPacket::MessageType::PKT_CS_CYPT:
 	{
-		mCrpyt.CreatePrivateKey();
-		mCrpyt.ExportPublicKey();
+		mCrypt.CreatePrivateKey();
+		mCrypt.ExportPublicKey();
 
-		mCrpyt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
-		mCrpyt.ConvertRC4();
+		mCrypt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
+		mCrypt.ConvertRC4();
 
-		DWORD len = mCrpyt.GetDataLen();
-		PBYTE data = mCrpyt.GetKeyBlob();
+		DWORD len = mCrypt.GetDataLen();
+		PBYTE data = mCrypt.GetKeyBlob();
 
 		FastSpinlockGuard criticalSection(mSendBufferLock);
 
@@ -210,7 +210,7 @@ void ClientSession::PacketHandler()
 		LSendRequestSessionList->push_back(this);
 		mSendBuffer.Commit(totalSize);
 
-		//3hand shake로 해야함
+		//todo : 3hand shake로 해야함
 		mIsEnCrypt = true;
 
 		break;

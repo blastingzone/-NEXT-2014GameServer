@@ -44,7 +44,7 @@ public:
 protected:
 
 	SOCKET			mSocket;
-	Crypt			mCrpyt;
+	Crypt			mCrypt;
 
 	CircularBuffer	mRecvBuffer;
 	CircularBuffer	mSendBuffer;
