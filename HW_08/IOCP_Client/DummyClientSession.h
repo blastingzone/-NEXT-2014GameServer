@@ -19,6 +19,8 @@ public:
 	//virtual void OnReceive(size_t len);
 	virtual void OnRelease();
 
+	void PacketHandler();
+
 	void Login();
 
 private:

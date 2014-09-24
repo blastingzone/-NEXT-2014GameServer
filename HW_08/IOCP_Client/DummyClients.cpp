@@ -9,9 +9,9 @@
 #include "IocpManager.h"
 
 /// config values
-int MAX_CONNECTION = 0;
+int MAX_CONNECTION = 1000;
 char CONNECT_ADDR[32] = "127.0.0.1";
-unsigned short CONNECT_PORT = 9990;
+unsigned short CONNECT_PORT = 9000;
 
 
 char* GetCommandOption(char** begin, char** end, const std::string& comparand)

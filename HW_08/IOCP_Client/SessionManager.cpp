@@ -55,6 +55,7 @@ bool SessionManager::ConnectSessions()
 		if (false == session->ConnectRequest())
 			return false;
 	
+		//일정 간격으로 요청
 		Sleep(10);
 	}
 

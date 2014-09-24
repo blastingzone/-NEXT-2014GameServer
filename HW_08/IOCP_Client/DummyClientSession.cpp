@@ -120,6 +120,7 @@ void DummyClientSession::ConnectCompletion()
 	int curr = GSessionManager->IncreaseClientSession();
 	printf_s("[DEBUG:%d] Session established: IP=%s, PORT=%d \n", curr, inet_ntoa(mConnectAddr.sin_addr), ntohs(mConnectAddr.sin_port));
 
+	//최초 송신
 	Login();
 }
 
@@ -168,5 +169,33 @@ void DummyClientSession::Login()
 	loginRequest.set_playerid(id++);
 
 	SendRequest(MyPacket::PKT_CS_LOGIN, loginRequest);
+}
+
+void DummyClientSession::PacketHandler()
+{
+	PacketHeader messageHeader;
+
+	char* start = mRecvBuffer.GetBufferStart();
+	memcpy(&messageHeader, start, PacketHeaderSize);
+	mRecvBuffer.Remove(PacketHeaderSize);
+
+	const void* pPacket = mRecvBuffer.GetBufferStart();
+
+	switch (messageHeader.mType)
+	{
+	case MyPacket::MessageType::PKT_SC_CYPT:
+	case MyPacket::MessageType::PKT_SC_LOGIN:
+	case MyPacket::MessageType::PKT_SC_CHAT:
+	case MyPacket::MessageType::PKT_SC_MOVE:
+
+	default:
+	{
+		//와서는 안될 구역
+		CRASH_ASSERT(false);
+		break;
+	}
+	}
+
+	mRecvBuffer.Remove(messageHeader.mSize);
 }
 
