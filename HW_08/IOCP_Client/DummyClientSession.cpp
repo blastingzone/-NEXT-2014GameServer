@@ -187,6 +187,9 @@ void DummyClientSession::PacketHandler()
 	{
 	case MyPacket::MessageType::PKT_SC_CYPT:
 	{
+		mCrypt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
+		mCrypt.ConvertRC4();
+
 		mIsEnCrypt = true;
 		//timer를 달아뒀으니 시간나면 쓰도록하자
 		Login();
