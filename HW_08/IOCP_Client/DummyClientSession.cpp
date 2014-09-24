@@ -136,18 +136,18 @@ bool DummyClientSession::SendRequest(short packetType, const google::protobuf::M
 
 	FastSpinlockGuard criticalSection(mSendBufferLock);
 
-	int totalSize = payload.ByteSize() + HEADER_SIZE;
+	int totalSize = payload.ByteSize() + PacketHeaderSize;
 	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
 		return false;
 
-	protobuf::io::ArrayOutputStream arrayOutputStream(mSendBuffer.GetBuffer(), totalSize);
-	protobuf::io::CodedOutputStream codedOutputStream(&arrayOutputStream);
+	google::protobuf::io::ArrayOutputStream arrayOutputStream(mSendBuffer.GetBuffer(), totalSize);
+	google::protobuf::io::CodedOutputStream codedOutputStream(&arrayOutputStream);
 
 	PacketHeader header;
 	header.mSize = payload.ByteSize();
 	header.mType = packetType;
 
-	codedOutputStream.WriteRaw(&header, HEADER_SIZE);
+	codedOutputStream.WriteRaw(&header, PacketHeaderSize);
 	payload.SerializeToCodedStream(&codedOutputStream);
 
 

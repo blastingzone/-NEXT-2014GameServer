@@ -16,7 +16,7 @@ public:
 
 	bool SendRequest(short packetType, const google::protobuf::MessageLite& payload);
 
-	virtual void OnReceive(size_t len);
+	//virtual void OnReceive(size_t len);
 	virtual void OnRelease();
 
 	void Login();

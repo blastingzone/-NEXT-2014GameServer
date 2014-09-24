@@ -26,7 +26,7 @@ public:
 	void AddRef();
 	void ReleaseRef();
 
-	virtual void OnReceive(size_t len) {}
+	//virtual void OnReceive(size_t len) {}
 	virtual void OnDisconnect(DisconnectReason dr) {}
 	virtual void OnRelease() {}
 
@@ -58,4 +58,4 @@ protected:
 
 
 extern __declspec(thread) std::deque<Session*>* LSendRequestSessionList;
-extern __declspec(thread) std::deque<Session*>* LSendRequestFailedSessionList
+extern __declspec(thread) std::deque<Session*>* LSendRequestFailedSessionList;

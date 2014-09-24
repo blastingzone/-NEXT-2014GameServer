@@ -18,5 +18,5 @@ __declspec(thread) ThreadCallHistory* LThreadCallHistory = nullptr;
 __declspec(thread) ThreadCallElapsedRecord* LThreadCallElapsedRecord = nullptr;
 __declspec(thread) void* LRecentThisPointer = nullptr;
 
-ThreadCallHistory* GThreadCallHistory[MAX_WORKER_THREAD] = { 0, };
-ThreadCallElapsedRecord* GThreadCallElapsedRecord[MAX_WORKER_THREAD] = { 0, };
+ThreadCallHistory* GThreadCallHistory[MAX_IO_THREAD] = { 0, };
+ThreadCallElapsedRecord* GThreadCallElapsedRecord[MAX_IO_THREAD] = { 0, };
