@@ -134,12 +134,14 @@
   <ItemGroup>
     <ClCompile Include="..\3rdParty\MyPacket.pb.cc" />
     <ClCompile Include="CircularBuffer.cpp" />
+    <ClCompile Include="Crypt.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rdParty\MyPacket.pb.h" />
     <ClInclude Include="..\3rdParty\PacketHeader.h" />
     <ClInclude Include="CircularBuffer.h" />
+    <ClInclude Include="Crypt.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
