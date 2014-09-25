@@ -290,21 +290,16 @@ void ClientSession::PacketHandler()
 
 		printf_s("id: %d || Chat! : %s\n", mPlayer.GetPlayerId() ,chat.c_str());
 
-		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
-		MyPacket::ChatResult chatPacket;
-		/*
-		chat.append( "\n" );
-		chat.append( "server to client : chat from id : " );
-		chat.append( std::to_string( mPlayer.GetPlayerId() ) );
-		chat.append( "\n" );
-		*/
-		chatPacket.set_playermessage( chat.c_str() );
-		chatPacket.set_playername( "kim" ); //모조리 김씨
-
 		PlayerPtrList playerList = zone->GetPlayerList();
 
 		for (auto iter : playerList)
 		{
+			//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
+			MyPacket::ChatResult chatPacket;
+
+			chatPacket.set_playermessage(chat.c_str());
+			chatPacket.set_playername("kim"); //모조리 김씨
+
 			if(!(iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket)))
 				printf_s("SendReauest failed!\n");
 		}
