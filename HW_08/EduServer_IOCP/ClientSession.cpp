@@ -177,9 +177,7 @@ void ClientSession::PacketHandler()
 
 	char* start = mRecvBuffer.GetBufferStart();
 	memcpy(&messageHeader, start, PacketHeaderSize);
-	mRecvBuffer.Remove(PacketHeaderSize);
-
-	const void* pPacket = mRecvBuffer.GetBufferStart();
+	const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
 
 	switch ( messageHeader.mType )
 	{
@@ -344,11 +342,12 @@ void ClientSession::PacketHandler()
 	{
 		//*로컬* 에서는 와서는 안될 구역
 		//CRASH_ASSERT(false);
+		return;
 		break;
 	}
 	}
 
-	mRecvBuffer.Remove( messageHeader.mSize );
+	mRecvBuffer.Remove(PacketHeaderSize + messageHeader.mSize);
 }
 
 bool ClientSession::SendRequest(short packetType, const google::protobuf::MessageLite& payload)
