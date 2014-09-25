@@ -267,23 +267,23 @@ void ClientSession::PacketHandler()
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
-		//printf_s("Chat!!! %s\n", chat.c_str());
+		printf_s("Chat!!! %s\n", chat.c_str());
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
 		MyPacket::ChatResult chatPacket;
+		/*
 		chat.append( "\n" );
 		chat.append( "server to client : chat from id : " );
 		chat.append( std::to_string( mPlayer.GetPlayerId() ) );
 		chat.append( "\n" );
+		*/
 		chatPacket.set_playermessage( chat.c_str() );
 		chatPacket.set_playername( "kim" ); //모조리 김씨
 
 		PlayerPtrList playerList = zone->GetPlayerList();
 
-		int i = 0;
 		for (auto iter : playerList)
 		{
-			//printf_s("iteration count : %d\n", ++i);
 			if(!(iter->mSession->SendRequest(MyPacket::PKT_SC_CHAT, chatPacket)))
 				printf_s("SendReauest failed!\n");
 		}

@@ -151,18 +151,12 @@ bool Session::FlushSend()
 		if ( 0 == mSendPendingCount )
 			return true;
 
-		//return false;
-		//임시방편
-		return true;
+		return false;
 	}
 
 	/// 이전의 send가 완료 안된 경우
 	if ( mSendPendingCount > 0 )
-	{
-		//return false;
-		//임시방편
-		return true;
-	}
+		return false;
 		
 
 	char* start = mSendBuffer.GetBufferStart();
