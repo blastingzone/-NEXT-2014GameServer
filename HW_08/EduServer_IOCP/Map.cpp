@@ -73,16 +73,6 @@ void Zone::PushPlayer(Player* player)
 {
 	FastSpinlockGuard criticalSection(mZoneLock);
 	
-	//있을 경우 덮어쓰고 없을 경우 생성
-// 	if ( player == mPlayerMap.find( player->GetPlayerId() )->second )
-// 	{
-// 
-// 	}
-// 	else
-// 	{
-// 		mPlayerMap.insert( make_pair(player->GetPlayerId(), player) );
-// 	}
-
 	// 이게 더 좋단 말이지? ㅋㅋ
 	mPlayerMap[player->GetPlayerId()] = player;
 
@@ -104,13 +94,6 @@ PlayerPtrList Zone::GetPlayerList()
 
 	//todo :vector 미리 확장해두어야함
 	PlayerPtrList playerVec;
-
-// 	int i = 0;
-// 	for (auto iter : mPlayerMap)
-// 	{
-// 		playerVec[i] = iter.second;
-// 		++i;
-// 	}
 
 	// 고전적인 루프 ㅋㅋ
 	for ( auto iter = mPlayerMap.begin(); iter != mPlayerMap.end(); ++iter )

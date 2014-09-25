@@ -290,7 +290,7 @@ void ClientSession::PacketHandler()
 		std::string chat = message.playermessage();
 		ZonePtr zone = GMap->GetZone(mPlayer.mPosX, mPlayer.mPosY);
 
-		printf_s("Chat!!! %s\n", chat.c_str());
+		printf_s("id: %d || Chat! : %s\n", mPlayer.GetPlayerId() ,chat.c_str());
 
 		//아래 함수에서 매번 루프돌면서 복사가 일어나기 때문에 주의해야함
 		MyPacket::ChatResult chatPacket;
@@ -326,7 +326,7 @@ void ClientSession::PacketHandler()
 		mPlayer.SetZone();
 		//이동처리가 완료됨을 알리는 패킷
 		
-		printf_s("Player pos : %f, %f \n", mPlayer.mPosX, mPlayer.mPosZ);
+		printf_s("id: %d || Player pos : %f, %f \n", mPlayer.GetPlayerId(), mPlayer.mPosX, mPlayer.mPosZ);
 
 		MyPacket::MoveResult movePacket;
 
