@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Crypt.h"
+#include "Exception.h"
 
 Crypt::Crypt()
 {
@@ -24,39 +25,55 @@ void Crypt::CreatePrivateKey()
 		MS_ENH_DSS_DH_PROV,
 		PROV_DSS_DH,
 		CRYPT_VERIFYCONTEXT))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
+
 
 	// 임시 private key를 생성
 	if (!CryptGenKey(
 		mProvParty,
 		CALG_DH_EPHEM,
 		DHKEYSIZE << 16 | CRYPT_EXPORTABLE | CRYPT_PREGEN,
-		&mProvParty))
+		&mPrivateKey))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 	// private key에 대한 설정
 	if (!CryptSetKeyParam(
-		mProvParty,
+		mPrivateKey,
 		KP_P,
 		(PBYTE)&mP,
 		0))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 	// private key에 대한 generator설정
 	if (!CryptSetKeyParam(
-		mProvParty,
+		mPrivateKey,
 		KP_G,
 		(PBYTE)&mG,
 		0))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 	// private key에 대한 비밀값 생성
 	if (!CryptSetKeyParam(
-		mProvParty,
+		mPrivateKey,
 		KP_X,
 		NULL,
 		0))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 }
 
 void Crypt::ExportPublicKey()
@@ -69,21 +86,30 @@ void Crypt::ExportPublicKey()
 		0,
 		NULL,
 		&mKeyBlobLen))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 	// key BLOB를 위한 메모리 할당
 	if (!(mKeyBlob = (PBYTE)malloc(mKeyBlobLen)))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 	// key BLOB를 얻음
-	if(!CryptExportKey(
+	if (!CryptExportKey(
 		mPrivateKey,
 		0,
 		PUBLICKEYBLOB,
 		0,
 		mKeyBlob,
 		&mKeyBlobLen))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 }
 
 void Crypt::ImportPublicKey(PBYTE remoteKeyBlob, DWORD remoteDataLen)
@@ -95,7 +121,10 @@ void Crypt::ImportPublicKey(PBYTE remoteKeyBlob, DWORD remoteDataLen)
 		mPrivateKey,
 		0,
 		&mSessionKey))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 }
 
 void Crypt::ConvertRC4()
@@ -109,7 +138,10 @@ void Crypt::ConvertRC4()
 		KP_ALGID,
 		(PBYTE)&Algid,
 		0))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 
 }
 
@@ -117,7 +149,7 @@ void Crypt::RC4Encyrpt(PBYTE data, DWORD length)
 {
 	// Get the size.
 	DWORD dwLength = length;
-	if(!CryptEncrypt(
+	if (!CryptEncrypt(
 		mSessionKey,
 		0,
 		TRUE,
@@ -125,7 +157,10 @@ void Crypt::RC4Encyrpt(PBYTE data, DWORD length)
 		data,
 		&dwLength,
 		length))
-	Release();
+	{
+		Release();
+		CRASH_ASSERT(false);
+	}
 }
 
 void Crypt::RC4Decrypt(PBYTE data, DWORD length)
@@ -138,7 +173,10 @@ void Crypt::RC4Decrypt(PBYTE data, DWORD length)
 		0,
 		data,
 		&dwLength))
+	{
 		Release();
+		CRASH_ASSERT(false);
+	}
 }
 
 
@@ -169,7 +207,6 @@ void Crypt::Release()
 		mProvParty = NULL;
 	}
 }
-
 
 
 
