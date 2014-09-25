@@ -49,6 +49,8 @@ enum MessageType {
   PKT_SC_MOVE = 6,
   PKT_CS_CYPT = 7,
   PKT_SC_CYPT = 8,
+  PKT_CS_CYPT_OK = 9,
+  PKT_SC_START = 10,
 };
 bool MessageType_IsValid(int value);
 const MessageType MessageType_MIN = PKT_CS_LOGIN;

@@ -123,8 +123,8 @@ void DummyClientSession::ConnectCompletion()
 	printf_s("[DEBUG:%d] Session established: IP=%s, PORT=%d \n", curr, inet_ntoa(mConnectAddr.sin_addr), ntohs(mConnectAddr.sin_port));
 
 	//최초 송신
-	Login();
-	//ExportKey();
+	//Login();
+	ExportKey();
 }
 
 
@@ -191,8 +191,12 @@ void DummyClientSession::PacketHandler()
 		mCrypt.ImportPublicKey((PBYTE)pPacket, messageHeader.mSize);
 		mCrypt.ConvertRC4();
 
-		mIsEnCrypt = true;
-		//timer를 달아뒀으니 시간나면 쓰도록하자
+		///timer를 달아뒀으니 시간나면 쓰도록하자
+		CryptOk();
+		break;
+	}
+	case MyPacket::MessageType::PKT_SC_START:
+	{
 		Login();
 		break;
 	}
@@ -266,21 +270,46 @@ void DummyClientSession::ExportKey()
 	DWORD len = mCrypt.GetDataLen();
 	PBYTE data = mCrypt.GetKeyBlob();
 
+	printf_s("messageSize : %d\n", len);
+	printf_s("messageData : %s\n", data);
+
 	FastSpinlockGuard criticalSection(mSendBufferLock);
 
 	int totalSize = len + PacketHeaderSize;
 	if (mSendBuffer.GetFreeSpaceSize() < totalSize)
 		return;
 
-	memcpy(mSendBuffer.GetBuffer(), data, len);
-
 	PacketHeader header;
 	header.mSize = len;
 	header.mType = MyPacket::MessageType::PKT_CS_CYPT;
 
+	char* buff = new char[PacketHeaderSize + len];
+	memcpy(buff, &header, PacketHeaderSize);
+	memcpy(buff + PacketHeaderSize, data, len);
+	memcpy(mSendBuffer.GetBuffer(), buff, PacketHeaderSize + len);
+
 	//나중에 모아서 보냄
 	LSendRequestSessionList->push_back(this);
 	mSendBuffer.Commit(totalSize);
+}
+
+void DummyClientSession::CryptOk()
+{
+	FastSpinlockGuard criticalSection(mSendBufferLock);
+
+	if (mSendBuffer.GetFreeSpaceSize() < PacketHeaderSize)
+		return;
+
+	PacketHeader header;
+	header.mSize = 0;
+	header.mType = MyPacket::MessageType::PKT_CS_CYPT_OK;
+
+	memcpy(mSendBuffer.GetBuffer(), &header, PacketHeaderSize);
+
+	LSendRequestSessionList->push_back(this);
+	mSendBuffer.Commit(PacketHeaderSize);
+
+	mIsSwitchEnCrypt = true;
 }
 
 void DummyClientSession::Chat(int id)
@@ -308,4 +337,6 @@ void DummyClientSession::Move(int id)
 
 	SendRequest(MyPacket::PKT_CS_MOVE, moveRequest);
 }
+
+
 

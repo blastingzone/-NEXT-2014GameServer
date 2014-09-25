@@ -22,6 +22,7 @@ public:
 	void PacketHandler();
 
 	void ExportKey();
+	void CryptOk();
 	void Login();
 	void Chat(int id);
 	void Move(int id);

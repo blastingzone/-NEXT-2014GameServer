@@ -11,7 +11,7 @@ __declspec(thread) std::deque<Session*>* LSendRequestSessionList = nullptr;
 __declspec(thread) std::deque<Session*>* LSendRequestFailedSessionList = nullptr;
 
 Session::Session(size_t sendBufSize, size_t recvBufSize) 
-	: mSendBuffer(sendBufSize), mRecvBuffer(recvBufSize), mConnected(0), mRefCount(0), mSendPendingCount(0), mIsEnCrypt(false)
+	: mSendBuffer(sendBufSize), mRecvBuffer(recvBufSize), mConnected(0), mRefCount(0), mSendPendingCount(0), mIsEnCrypt(false), mIsSwitchEnCrypt(false)
 {
 	mSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }
@@ -157,9 +157,11 @@ bool Session::FlushSend()
 	char* start = mSendBuffer.GetBufferStart();
 	ULONG len = mSendBuffer.GetContiguiousBytes();
 
-	if (mIsEnCrypt)
+	if (mIsSwitchEnCrypt && mIsEnCrypt)
 		mCrypt.RC4Encyrpt((PBYTE)start, len);
-	
+	if (mIsSwitchEnCrypt)
+		mIsEnCrypt = true;
+
 	OverlappedSendContext* sendContext = new OverlappedSendContext(this);
 
 	DWORD sendbytes = 0;

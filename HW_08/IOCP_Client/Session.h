@@ -52,6 +52,7 @@ protected:
 	volatile long	mConnected;
 
 	bool			mIsEnCrypt;
+	bool			mIsSwitchEnCrypt;
 
 	int64_t	mSendTotal = 0;
 	int64_t mRecvTotal = 0;

@@ -10,7 +10,7 @@
 #include "MemoryPool.h"
 
 /// config values
-int MAX_CONNECTION = 1000;
+int MAX_CONNECTION = 1;
 char CONNECT_ADDR[32] = "127.0.0.1";
 unsigned short CONNECT_PORT = 9000;
 
