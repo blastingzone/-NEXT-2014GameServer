@@ -226,7 +226,7 @@ void DummyClientSession::PacketHandler()
 		if (false == message.ParseFromCodedStream(&payloadInputStream))
 			break;
 
-		printf_s("Chat is comming! : %s\n", message.playermessage().c_str());
+		printf_s("id: %d || Chat is comming! : %s\n", mPlayerID, message.playermessage().c_str());
 
 		Move(mPlayerID);
 
