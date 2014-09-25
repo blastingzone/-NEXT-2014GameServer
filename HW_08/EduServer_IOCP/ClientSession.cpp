@@ -175,9 +175,24 @@ void ClientSession::PacketHandler()
 {
 	PacketHeader messageHeader;
 
+	if ( mRecvBuffer.GetStoredSize() < PacketHeaderSize )
+	{
+		printf_s( "Packet Header Loss \n" );
+		return;
+	}
+
 	char* start = mRecvBuffer.GetBufferStart();
 	memcpy(&messageHeader, start, PacketHeaderSize);
-	const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
+
+	if ( mRecvBuffer.GetStoredSize() < PacketHeaderSize + messageHeader.mSize )
+	{
+		printf_s( "Packet Body Loss \n" );
+		return;
+	}
+
+	//const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
+	mRecvBuffer.Remove( PacketHeaderSize );
+	const void* pPacket = mRecvBuffer.GetBufferStart();
 
 	switch ( messageHeader.mType )
 	{
