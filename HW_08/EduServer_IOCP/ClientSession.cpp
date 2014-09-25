@@ -185,6 +185,9 @@ void ClientSession::PacketHandler()
 	{
 	case MyPacket::MessageType::PKT_CS_CYPT:
 	{
+		printf_s("messageSize : %d\n", messageHeader.mSize);
+		printf_s("messageData : %s\n", pPacket);
+
 		mCrypt.CreatePrivateKey();
 		mCrypt.ExportPublicKey();
 
@@ -200,19 +203,39 @@ void ClientSession::PacketHandler()
 		if (mSendBuffer.GetFreeSpaceSize() < totalSize)
 			break;
 
-		memcpy(mSendBuffer.GetBuffer(), data, len);
-
 		PacketHeader header;
 		header.mSize = len;
 		header.mType = MyPacket::MessageType::PKT_SC_CYPT;
+
+		char* buff = new char[PacketHeaderSize + len];
+		memcpy(buff, &header, PacketHeaderSize);
+		memcpy(buff + PacketHeaderSize, data, len);
+		memcpy(mSendBuffer.GetBuffer(), buff, PacketHeaderSize + len);
 
 		//나중에 모아서 보냄
 		LSendRequestSessionList->push_back(this);
 		mSendBuffer.Commit(totalSize);
 
-		//todo : 3hand shake로 해야함
+		break;
+	}
+	case MyPacket::MessageType::PKT_CS_CYPT_OK:
+	{
+		//start test
 		mIsEnCrypt = true;
 
+		FastSpinlockGuard criticalSection(mSendBufferLock);
+
+		if (mSendBuffer.GetFreeSpaceSize() < PacketHeaderSize)
+			return;
+
+		PacketHeader header;
+		header.mSize = 0;
+		header.mType = MyPacket::MessageType::PKT_SC_START;
+
+		memcpy(mSendBuffer.GetBuffer(), &header, PacketHeaderSize);
+
+		LSendRequestSessionList->push_back(this);
+		mSendBuffer.Commit(PacketHeaderSize);
 		break;
 	}
 	case MyPacket::MessageType::PKT_CS_LOGIN:
