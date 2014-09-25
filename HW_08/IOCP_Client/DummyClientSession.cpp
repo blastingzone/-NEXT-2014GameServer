@@ -178,10 +178,25 @@ void DummyClientSession::PacketHandler()
 {
 	PacketHeader messageHeader;
 
+	if ( mRecvBuffer.GetStoredSize() < PacketHeaderSize )
+	{
+		printf_s( "Packet Header Loss \n" );
+		return;
+	}
+
 	char* start = mRecvBuffer.GetBufferStart();
 	memcpy(&messageHeader, start, PacketHeaderSize);
 	//일단 위험요소가 있다.
-	const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
+	//const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
+	
+	if ( mRecvBuffer.GetStoredSize() < PacketHeaderSize + messageHeader.mSize )
+	{
+		printf_s( "Packet Body Loss \n" );
+		return;
+	}
+
+	mRecvBuffer.Remove( PacketHeaderSize );
+	const void* pPacket = mRecvBuffer.GetBufferStart();
 
 	switch (messageHeader.mType)
 	{
@@ -254,8 +269,8 @@ void DummyClientSession::PacketHandler()
 	{
 		//*로컬* 에서는 와서는 안될 구역
 		//CRASH_ASSERT(false);
+		printf_s( "Packet Parsing Error\n" );
 		return;
-		break;
 	}
 	}
 
