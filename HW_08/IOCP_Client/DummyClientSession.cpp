@@ -218,7 +218,7 @@ void DummyClientSession::PacketHandler()
 		if (false == message.ParseFromCodedStream(&payloadInputStream))
 			break;
 
-		printf_s("Chat is comming! : %s \n", message.playermessage().c_str());
+		printf_s("Chat is comming! : %s\n", message.playermessage().c_str());
 
 		break;
 	}
@@ -230,7 +230,7 @@ void DummyClientSession::PacketHandler()
 		if (false == message.ParseFromCodedStream(&payloadInputStream))
 			break;
 
-		printf_s("moving! : %f, %f, %f \n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
+		printf_s("moving! : %f, %f, %f\n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
 
 		//마찬가지로 타이머를 사용하자
 		Sleep(100);

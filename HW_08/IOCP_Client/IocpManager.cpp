@@ -151,6 +151,9 @@ unsigned int WINAPI IocpManager::IoWorkerThread(LPVOID lpParam)
 	LTimer = new Timer;
 	LLockOrderChecker = new LockOrderChecker(LIoThreadId);
 
+	GThreadCallHistory[LWorkerThreadId] = LThreadCallHistory = new ThreadCallHistory(LWorkerThreadId);
+	GThreadCallElapsedRecord[LWorkerThreadId] = LThreadCallElapsedRecord = new ThreadCallElapsedRecord(LWorkerThreadId);
+
 	return GIocpManager->mIoWorkerThread[LWorkerThreadId]->Run();
 }
 

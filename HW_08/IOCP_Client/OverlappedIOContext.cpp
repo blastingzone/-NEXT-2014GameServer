@@ -39,10 +39,6 @@ void DeleteIoContext(OverlappedIOContext* context)
 		delete static_cast<OverlappedDisconnectContext*>(context);
 		break;
 
-	case IO_ACCEPT:
-		delete static_cast<OverlappedAcceptContext*>(context);
-		break;
-
 	case IO_CONNECT:
 		delete static_cast<OverlappedConnectContext*>(context);
 		break;

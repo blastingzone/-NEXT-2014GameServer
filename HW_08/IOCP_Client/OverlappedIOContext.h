@@ -8,7 +8,7 @@ enum IOType
 	IO_SEND,
 	IO_RECV,
 	IO_RECV_ZERO,
-	IO_ACCEPT,
+
 	IO_DISCONNECT,
 	IO_CONNECT
 };
@@ -68,13 +68,6 @@ struct OverlappedDisconnectContext : public OverlappedIOContext, public ObjectPo
 	}
 
 	DisconnectReason mDisconnectReason;
-};
-
-struct OverlappedAcceptContext : public OverlappedIOContext, public ObjectPool < OverlappedAcceptContext >
-{
-	OverlappedAcceptContext(Session* owner) : OverlappedIOContext(owner, IO_ACCEPT)
-	{
-	}
 };
 
 struct OverlappedConnectContext : public OverlappedIOContext, public ObjectPool < OverlappedConnectContext >

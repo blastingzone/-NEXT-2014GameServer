@@ -29,7 +29,6 @@ DWORD IOThread::Run()
 		if (false == DoIocpJob())
 			break;
 		
-
 		DoSendJob(); ///< aggregated sends
 
 		//... ...
@@ -41,15 +40,13 @@ DWORD IOThread::Run()
 bool IOThread::DoIocpJob()
 {
 	DWORD dwTransferred = 0;
-	LPOVERLAPPED overlapped = nullptr;
+	OverlappedIOContext* context = nullptr;
 
 	ULONG_PTR completionKey = 0;
 
-	int ret = GetQueuedCompletionStatus(mCompletionPort, &dwTransferred, (PULONG_PTR)&completionKey, &overlapped, GQCS_TIMEOUT);
+	int ret = GetQueuedCompletionStatus(mCompletionPort, &dwTransferred, (PULONG_PTR)&completionKey, (LPOVERLAPPED*)&context, GQCS_TIMEOUT);
 
 	/// 아래로는 일반적인 I/O 처리
-
-	OverlappedIOContext* context = reinterpret_cast<OverlappedIOContext*>(overlapped);
 
 	Session* remote = context ? context->mSessionObject : nullptr;
 
@@ -61,7 +58,7 @@ bool IOThread::DoIocpJob()
 
 		/// check time out first 
 		if (context == nullptr && GetLastError() == WAIT_TIMEOUT)
-			return false;
+			return true;
 
 		if (context->mIoType == IO_RECV || context->mIoType == IO_SEND)
 		{
