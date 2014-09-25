@@ -180,9 +180,8 @@ void DummyClientSession::PacketHandler()
 
 	char* start = mRecvBuffer.GetBufferStart();
 	memcpy(&messageHeader, start, PacketHeaderSize);
-	mRecvBuffer.Remove(PacketHeaderSize);
-
-	const void* pPacket = mRecvBuffer.GetBufferStart();
+	//일단 위험요소가 있다.
+	const void* pPacket = mRecvBuffer.GetBufferStart() + PacketHeaderSize;
 
 	switch (messageHeader.mType)
 	{
@@ -255,11 +254,12 @@ void DummyClientSession::PacketHandler()
 	{
 		//*로컬* 에서는 와서는 안될 구역
 		//CRASH_ASSERT(false);
+		return;
 		break;
 	}
 	}
 
-	mRecvBuffer.Remove(messageHeader.mSize);
+	mRecvBuffer.Remove(PacketHeaderSize + messageHeader.mSize);
 }
 
 void DummyClientSession::ExportKey()
