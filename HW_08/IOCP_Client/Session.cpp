@@ -218,6 +218,8 @@ void Session::RecvCompletion(DWORD transferred)
 		mCrypt.RC4Decrypt((PBYTE)mRecvBuffer.GetBuffer(), transferred);
 
 	mRecvBuffer.Commit(transferred);
+
+	mRecvTotal += transferred;
 }
 
 
