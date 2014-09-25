@@ -253,8 +253,8 @@ void DummyClientSession::PacketHandler()
 
 	default:
 	{
-		//와서는 안될 구역
-		CRASH_ASSERT(false);
+		//*로컬* 에서는 와서는 안될 구역
+		//CRASH_ASSERT(false);
 		break;
 	}
 	}
