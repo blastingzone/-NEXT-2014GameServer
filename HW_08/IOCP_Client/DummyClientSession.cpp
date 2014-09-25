@@ -246,7 +246,7 @@ void DummyClientSession::PacketHandler()
 		Sleep(100);
 
 		Move(message.playerid());
-		Chat(message.playerid());
+		//Chat(message.playerid());
 
 		break;
 	}
