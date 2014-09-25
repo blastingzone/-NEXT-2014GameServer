@@ -40,7 +40,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	/// block here...
 	getchar();
 
-	printf_s("Terminating Dummies...\n");
+	printf_s( "Terminating Dummies...\n" );
 
 	/// Disconnect request here
 	GSessionManager->DisconnectSessions();
@@ -50,6 +50,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	GSessionManager->PrintTotalTransferred();
 
 	GIocpManager->Finalize();
+
+	// want to see result
+	getchar();
 
 	delete GIocpManager;
 	delete GSessionManager;
