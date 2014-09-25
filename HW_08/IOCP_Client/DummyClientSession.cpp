@@ -11,7 +11,7 @@
 #include "PacketHeader.h"
 #include "MyPacket.pb.h"
 
-#include <time.h>
+#include <ctime>
 
 #define CLIENT_BUFSIZE	65536
 
@@ -124,6 +124,7 @@ void DummyClientSession::ConnectCompletion()
 
 	//최초 송신
 	Login();
+	//ExportKey();
 }
 
 
@@ -207,7 +208,10 @@ void DummyClientSession::PacketHandler()
 
 		printf_s("Login Success! id : %d\n", message.playerid());
 
-		Move(message.playerid());
+		mPlayerID = message.playerid();
+
+		Move(mPlayerID);
+
 		break;
 	}
 	case MyPacket::MessageType::PKT_SC_CHAT:
@@ -220,6 +224,8 @@ void DummyClientSession::PacketHandler()
 
 		printf_s("Chat is comming! : %s\n", message.playermessage().c_str());
 
+		Move(mPlayerID);
+
 		break;
 	}
 	case MyPacket::MessageType::PKT_SC_MOVE:
@@ -230,7 +236,7 @@ void DummyClientSession::PacketHandler()
 		if (false == message.ParseFromCodedStream(&payloadInputStream))
 			break;
 
-		printf_s("moving! : %f, %f, %f\n", message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
+		printf_s("id: %d || moving! : %f, %f, %f\n", message.playerid(), message.playerpos().x(), message.playerpos().y(), message.playerpos().z());
 
 		//마찬가지로 타이머를 사용하자
 		Sleep(100);
@@ -293,13 +299,12 @@ void DummyClientSession::Move(int id)
 {
 	MyPacket::MoveRequest moveRequest;
 
-	//나중에 std::rand한번 써보자
-	srand(time(NULL));
+	//std::srand(std::time(0));
 
 	moveRequest.set_playerid(id);
-	moveRequest.mutable_playerpos()->set_x(rand()%1000);
-	moveRequest.mutable_playerpos()->set_y(rand()%1000);
-	moveRequest.mutable_playerpos()->set_z(rand()%1000);
+	moveRequest.mutable_playerpos()->set_x(std::rand()%1000);
+	moveRequest.mutable_playerpos()->set_y(0);
+	moveRequest.mutable_playerpos()->set_z(std::rand()%1000);
 
 	SendRequest(MyPacket::PKT_CS_MOVE, moveRequest);
 }

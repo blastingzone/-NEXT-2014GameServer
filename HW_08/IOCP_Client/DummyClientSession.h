@@ -29,6 +29,7 @@ public:
 private:
 	
 	SOCKADDR_IN mConnectAddr;
+	int			mPlayerID;
 } ;
 
 
